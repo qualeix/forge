@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Animated, Pressable } from "react-native";
 import { useRef } from "react";
 import { theme } from "../../constants/theme";
+import { useSettings } from "../SettingsContext";
 
 function AnimatedTabButton(props: any) {
   const scale = useRef(new Animated.Value(1)).current;
@@ -25,6 +26,8 @@ function AnimatedTabButton(props: any) {
 }
 
 export default function TabLayout() {
+  const { t } = useSettings();
+
   return (
     <Tabs
       screenOptions={{
@@ -42,7 +45,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: theme.colors.amber,
         tabBarInactiveTintColor: theme.colors.muted,
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: "600",
           letterSpacing: 0.5,
         },
@@ -51,7 +54,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "TODAY",
+          title: t.tab_today,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="flame" size={size} color={color} />
           ),
@@ -60,7 +63,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="meals"
         options={{
-          title: "MEALS",
+          title: t.tab_meals,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="nutrition" size={size} color={color} />
           ),
@@ -69,9 +72,18 @@ export default function TabLayout() {
       <Tabs.Screen
         name="progress"
         options={{
-          title: "PROGRESS",
+          title: t.tab_progress,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="trending-up" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: t.tab_settings,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="cog" size={size} color={color} />
           ),
         }}
       />

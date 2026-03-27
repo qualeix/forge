@@ -4,51 +4,51 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { theme } from "../../constants/theme";
-import { getTodayMenu, getTodayWorkout, getTodayKey } from "../../constants/data";
+import { getTodayMenu, getTodayWorkout } from "../../constants/data";
+import { useSettings } from "../SettingsContext";
 
 export default function TodayScreen() {
   const router = useRouter();
+  const { t, lang } = useSettings();
   const todayMenu = getTodayMenu();
   const todayWorkout = getTodayWorkout();
-  const todayKey = getTodayKey();
+  const workoutName = todayWorkout
+    ? (lang === "fr" && (todayWorkout as any).name_fr ? (todayWorkout as any).name_fr : todayWorkout.name)
+    : "";
+  const exName = (ex: any) => lang === "fr" && ex.name_fr ? ex.name_fr : ex.name;
+  const mealName = (meal: any) => lang === "fr" && meal.name_fr ? meal.name_fr : meal.name;
+  const mealDetails = (meal: any) => lang === "fr" && meal.details_fr ? meal.details_fr : meal.details;
 
   const now = new Date();
   const currentTime = now.getHours() * 60 + now.getMinutes();
-
-  const parseTime = (t: string) => {
-    const [h, m] = t.split(":").map(Number);
+  const parseTime = (time: string) => {
+    const [h, m] = time.split(":").map(Number);
     return h * 60 + m;
   };
 
-  const nextMeal = todayMenu.meals.find(
-    (meal) => parseTime(meal.time) > currentTime
-  );
-
-  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const dayName = dayNames[new Date().getDay()];
-  const dateStr = now.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const nextMeal = todayMenu.meals.find((meal) => parseTime(meal.time) > currentTime);
+  const dayName = t.days[now.getDay()];
+  const dateStr = now.toLocaleDateString(t.date_locale, { day: "numeric", month: "long", year: "numeric" });
 
   // Staggered entrance animations
   const anims = useRef([0, 1, 2, 3].map(() => new Animated.Value(0))).current;
   const btnScale = useRef(new Animated.Value(1)).current;
-  const btnPressIn = () => Animated.spring(btnScale, { toValue: 0.96, useNativeDriver: true, tension: 220, friction: 7 }).start();
-  const btnPressOut = () => Animated.spring(btnScale, { toValue: 1, useNativeDriver: true, tension: 220, friction: 7 }).start();
+  const btnPressIn = () =>
+    Animated.spring(btnScale, { toValue: 0.96, useNativeDriver: true, tension: 220, friction: 7 }).start();
+  const btnPressOut = () =>
+    Animated.spring(btnScale, { toValue: 1, useNativeDriver: true, tension: 220, friction: 7 }).start();
 
   useEffect(() => {
     Animated.stagger(90,
       anims.map((a) =>
-        Animated.parallel([
-          Animated.timing(a, { toValue: 1, duration: 380, useNativeDriver: true }),
-        ])
+        Animated.timing(a, { toValue: 1, duration: 380, useNativeDriver: true })
       )
     ).start();
   }, []);
 
   const animStyle = (i: number) => ({
     opacity: anims[i],
-    transform: [{
-      translateY: anims[i].interpolate({ inputRange: [0, 1], outputRange: [22, 0] }),
-    }],
+    transform: [{ translateY: anims[i].interpolate({ inputRange: [0, 1], outputRange: [22, 0] }) }],
   });
 
   return (
@@ -66,7 +66,7 @@ export default function TodayScreen() {
           <Text style={{ color: theme.colors.text, fontSize: 32, fontWeight: "800", letterSpacing: -0.5 }}>
             {dayName}
           </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6, gap: 6 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}>
             <View style={{
               backgroundColor: todayWorkout ? theme.colors.amberSubtle : "#111",
               borderWidth: 1,
@@ -77,35 +77,33 @@ export default function TodayScreen() {
             }}>
               <Text style={{
                 color: todayWorkout ? theme.colors.amber : theme.colors.muted,
-                fontSize: 11, fontWeight: "700",
-                letterSpacing: 1.5, textTransform: "uppercase",
+                fontSize: 11, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase",
               }}>
-                {todayWorkout ? `⚡ ${todayWorkout.name}` : "Rest Day"}
+                {todayWorkout ? `⚡ ${workoutName}` : t.rest_day}
               </Text>
             </View>
           </View>
         </Animated.View>
 
-        {/* Workout Card */}
+        {/* Workout Card — training days only */}
         {todayWorkout && (
           <Animated.View style={[{ marginBottom: theme.spacing.lg }, animStyle(1)]}>
             <Text style={{ color: theme.colors.textSecondary, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
-              Today's Session
+              {t.today_section}
             </Text>
-            <View style={{ ...theme.glow, borderRadius: theme.radius.xl }}>
-              <View style={{
-                backgroundColor: theme.colors.card,
-                borderRadius: theme.radius.xl,
-                borderWidth: 1,
-                borderColor: theme.colors.glowBorder,
-                overflow: "hidden",
-              }}>
+            <View style={{
+              backgroundColor: theme.colors.card,
+              borderRadius: theme.radius.xl,
+              borderWidth: 1,
+              borderColor: theme.colors.amberDim,
+              overflow: "hidden",
+            }}>
                 <View style={{ padding: theme.spacing.lg }}>
                   <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: "800", marginBottom: 4 }}>
-                    {todayWorkout.name}
+                    {workoutName}
                   </Text>
                   <Text style={{ color: theme.colors.textSecondary, fontSize: 13, marginBottom: theme.spacing.lg }}>
-                    {todayWorkout.exercises.length} exercises · 90s rest
+                    {t.exercises_rest(todayWorkout.exercises.length, (todayWorkout as any).restSeconds ?? 90)}
                   </Text>
                   <View style={{ gap: 8, marginBottom: theme.spacing.lg }}>
                     {todayWorkout.exercises.map((ex, i) => (
@@ -114,7 +112,7 @@ export default function TodayScreen() {
                           {String(i + 1).padStart(2, "0")}
                         </Text>
                         <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "600", flex: 1 }}>
-                          {ex.name}
+                          {exName(ex)}
                         </Text>
                         <Text style={{ color: theme.colors.muted, fontSize: 12 }}>
                           {ex.sets}×{ex.reps}
@@ -122,7 +120,7 @@ export default function TodayScreen() {
                       </View>
                     ))}
                   </View>
-                  <Animated.View style={{ ...theme.glow, borderRadius: theme.radius.md, transform: [{ scale: btnScale }] }}>
+                  <Animated.View style={{ transform: [{ scale: btnScale }] }}>
                     <Pressable
                       onPress={() => router.push("/session")}
                       onPressIn={btnPressIn}
@@ -139,12 +137,11 @@ export default function TodayScreen() {
                     >
                       <Ionicons name="flash" size={18} color="#0D0D0D" />
                       <Text style={{ color: "#0D0D0D", fontSize: 15, fontWeight: "800", letterSpacing: 0.5 }}>
-                        START SESSION
+                        {t.start_session}
                       </Text>
                     </Pressable>
                   </Animated.View>
                 </View>
-              </View>
             </View>
           </Animated.View>
         )}
@@ -153,7 +150,7 @@ export default function TodayScreen() {
         {nextMeal && (
           <Animated.View style={[{ marginBottom: theme.spacing.lg }, animStyle(2)]}>
             <Text style={{ color: theme.colors.textSecondary, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
-              Next Meal
+              {t.next_meal}
             </Text>
             <View style={{
               backgroundColor: theme.colors.card,
@@ -165,10 +162,10 @@ export default function TodayScreen() {
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700", marginBottom: 4 }}>
-                    {nextMeal.name}
+                    {mealName(nextMeal)}
                   </Text>
                   <Text style={{ color: theme.colors.textSecondary, fontSize: 13, lineHeight: 18 }}>
-                    {nextMeal.details}
+                    {mealDetails(nextMeal)}
                   </Text>
                 </View>
                 <View style={{
@@ -186,17 +183,14 @@ export default function TodayScreen() {
               </View>
               <View style={{ flexDirection: "row", gap: 8 }}>
                 {[
-                  { label: "KCAL", value: nextMeal.kcal, color: theme.colors.amber },
-                  { label: "PRO", value: `${nextMeal.protein}g`, color: theme.colors.text },
-                  { label: "CARBS", value: `${nextMeal.carbs}g`, color: theme.colors.text },
-                  { label: "FAT", value: `${nextMeal.fat}g`, color: theme.colors.text },
+                  { label: t.kcal, value: String(nextMeal.kcal), color: theme.colors.amber },
+                  { label: t.pro, value: `${nextMeal.protein}g`, color: theme.colors.text },
+                  { label: t.carbs_label, value: `${nextMeal.carbs}g`, color: theme.colors.text },
+                  { label: t.fat_label, value: `${nextMeal.fat}g`, color: theme.colors.text },
                 ].map(({ label, value, color }) => (
                   <View key={label} style={{
-                    flex: 1,
-                    backgroundColor: theme.colors.cardElevated,
-                    borderRadius: theme.radius.sm,
-                    padding: 8,
-                    alignItems: "center",
+                    flex: 1, backgroundColor: theme.colors.cardElevated,
+                    borderRadius: theme.radius.sm, padding: 8, alignItems: "center",
                   }}>
                     <Text style={{ color, fontSize: 13, fontWeight: "800" }}>{value}</Text>
                     <Text style={{ color: theme.colors.muted, fontSize: 10, letterSpacing: 0.5, marginTop: 1 }}>{label}</Text>
@@ -207,33 +201,56 @@ export default function TodayScreen() {
           </Animated.View>
         )}
 
-        {/* Daily totals */}
-        <Animated.View style={animStyle(3)}>
-          <Text style={{ color: theme.colors.textSecondary, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
-            Daily Totals
-          </Text>
-          <View style={{
-            backgroundColor: theme.colors.card,
-            borderRadius: theme.radius.xl,
-            borderWidth: 1,
-            borderColor: theme.colors.border,
-            padding: theme.spacing.lg,
-            flexDirection: "row",
-            justifyContent: "space-between",
-          }}>
-            {[
-              { label: "Calories", value: `${todayMenu.totals.kcal}`, color: theme.colors.amber },
-              { label: "Protein", value: `${todayMenu.totals.protein}`, color: theme.colors.text },
-              { label: "Carbs", value: `${todayMenu.totals.carbs}`, color: theme.colors.text },
-              { label: "Fat", value: `${todayMenu.totals.fat}`, color: theme.colors.text },
-            ].map(({ label, value, color }) => (
-              <View key={label} style={{ alignItems: "center" }}>
-                <Text style={{ color, fontSize: 20, fontWeight: "800" }}>{value}</Text>
-                <Text style={{ color: theme.colors.muted, fontSize: 11, marginTop: 2 }}>{label}</Text>
-              </View>
-            ))}
-          </View>
-        </Animated.View>
+        {/* Rest day: Recovery card with nutrition totals embedded */}
+        {!todayWorkout && (
+          <Animated.View style={animStyle(3)}>
+            <View style={{
+              backgroundColor: theme.colors.card,
+              borderRadius: theme.radius.xl,
+              borderWidth: 1,
+              borderColor: theme.colors.amberDim,
+              padding: theme.spacing.lg,
+            }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  <View style={{
+                    backgroundColor: theme.colors.amberSubtle,
+                    borderRadius: theme.radius.sm,
+                    padding: 8,
+                    borderWidth: 1,
+                    borderColor: theme.colors.amberDeep,
+                  }}>
+                    <Ionicons name="moon-outline" size={18} color={theme.colors.amber} />
+                  </View>
+                  <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700" }}>
+                    {t.recovery_title}
+                  </Text>
+                </View>
+                <Text style={{ color: theme.colors.textSecondary, fontSize: 13, lineHeight: 20, marginBottom: theme.spacing.lg }}>
+                  {t.recovery_msg}
+                </Text>
+                {/* Nutrition totals row */}
+                <View style={{
+                  backgroundColor: theme.colors.cardElevated,
+                  borderRadius: theme.radius.md,
+                  padding: theme.spacing.md,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}>
+                  {[
+                    { label: t.calories, value: `${todayMenu.totals.kcal}`, color: theme.colors.amber },
+                    { label: t.protein, value: `${todayMenu.totals.protein}g`, color: theme.colors.text },
+                    { label: t.carbs, value: `${todayMenu.totals.carbs}g`, color: theme.colors.text },
+                    { label: t.fat, value: `${todayMenu.totals.fat}g`, color: theme.colors.text },
+                  ].map(({ label, value, color }) => (
+                    <View key={label} style={{ alignItems: "center" }}>
+                      <Text style={{ color, fontSize: 16, fontWeight: "800" }}>{value}</Text>
+                      <Text style={{ color: theme.colors.muted, fontSize: 10, marginTop: 2 }}>{label}</Text>
+                    </View>
+                  ))}
+                </View>
+            </View>
+          </Animated.View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

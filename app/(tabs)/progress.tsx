@@ -12,28 +12,25 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import * as SQLite from "expo-sqlite";
 import { theme } from "../../constants/theme";
 import { WORKOUT_DATA } from "../../constants/data";
+import { useSettings } from "../SettingsContext";
 
 type PRRow = { exercise_id: string; weight: number; date: string };
 
-const EXERCISE_GROUPS = [
-  { label: "Push Day", exercises: WORKOUT_DATA.tuesday.exercises },
-  { label: "Pull Day", exercises: WORKOUT_DATA.friday.exercises },
-  { label: "Leg Day", exercises: WORKOUT_DATA.sunday.exercises },
-];
-
 export default function ProgressScreen() {
+  const { t, lang } = useSettings();
+  const exName = (ex: any) => lang === "fr" && ex.name_fr ? ex.name_fr : ex.name;
   const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
   const [prMap, setPrMap] = useState<Record<string, PRRow>>({});
   const [activePR, setActivePR] = useState<{ id: string; name: string } | null>(null);
   const [prInput, setPrInput] = useState("");
 
-  // Staggered entrance: header + 3 groups
+  // Use useNativeDriver: false so elevation shadows animate with opacity
   const anims = useRef([0, 1, 2, 3].map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     Animated.stagger(80,
       anims.map((a) =>
-        Animated.timing(a, { toValue: 1, duration: 380, useNativeDriver: true })
+        Animated.timing(a, { toValue: 1, duration: 380, useNativeDriver: false })
       )
     ).start();
   }, []);
@@ -57,9 +54,6 @@ export default function ProgressScreen() {
   useEffect(() => {
     async function init() {
       const database = await SQLite.openDatabaseAsync("forge.db");
-      await database.runAsync(
-        "CREATE TABLE IF NOT EXISTS pr_entries (id INTEGER PRIMARY KEY AUTOINCREMENT, exercise_id TEXT NOT NULL, weight REAL NOT NULL, date TEXT NOT NULL)"
-      );
       setDb(database);
       await loadData(database);
     }
@@ -79,6 +73,12 @@ export default function ProgressScreen() {
     await loadData(db);
   };
 
+  const exerciseGroups = [
+    { label: t.push_day, exercises: WORKOUT_DATA.tuesday.exercises },
+    { label: t.pull_day, exercises: WORKOUT_DATA.friday.exercises },
+    { label: t.leg_day, exercises: WORKOUT_DATA.sunday.exercises },
+  ];
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={["top"]}>
       <ScrollView
@@ -91,43 +91,38 @@ export default function ProgressScreen() {
         <Animated.View style={[{ marginBottom: theme.spacing.xl }, animStyle(0)]}>
           <Text style={{
             color: theme.colors.textSecondary,
-            fontSize: 11, letterSpacing: 2,
-            textTransform: "uppercase", marginBottom: 4,
+            fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4,
           }}>
-            Tracking
+            {t.tracking}
           </Text>
-          <Text style={{
-            color: theme.colors.text,
-            fontSize: 32, fontWeight: "800", letterSpacing: -0.5,
-          }}>
-            Progress
+          <Text style={{ color: theme.colors.text, fontSize: 32, fontWeight: "800", letterSpacing: -0.5 }}>
+            {t.progress}
           </Text>
         </Animated.View>
 
-        {/* PR Section */}
         <Animated.View style={animStyle(0)}>
           <Text style={{
             color: theme.colors.textSecondary,
-            fontSize: 11, letterSpacing: 2,
-            textTransform: "uppercase", marginBottom: 12,
+            fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12,
           }}>
-            Personal Records
+            {t.personal_records}
           </Text>
         </Animated.View>
 
-        {EXERCISE_GROUPS.map((group, gi) => (
+        {exerciseGroups.map((group, gi) => (
           <Animated.View key={group.label} style={[{ marginBottom: theme.spacing.md }, animStyle(gi + 1)]}>
             <Text style={{
               color: theme.colors.amber,
-              fontSize: 11, fontWeight: "700",
-              letterSpacing: 1.5, textTransform: "uppercase",
+              fontSize: 11, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase",
               marginBottom: 8,
             }}>
               {group.label}
             </Text>
+            {/* Pixel-based amber halo — animates correctly with parent opacity */}
             <View style={{
-              ...theme.glow,
-              borderRadius: theme.radius.lg,
+              backgroundColor: "rgba(245,158,11,0.08)",
+              borderRadius: theme.radius.lg + 1,
+              padding: 1,
             }}>
               <View style={{
                 backgroundColor: theme.colors.card,
@@ -151,7 +146,7 @@ export default function ProgressScreen() {
                             setActivePR(null);
                             setPrInput("");
                           } else {
-                            setActivePR({ id: ex.id, name: ex.name });
+                            setActivePR({ id: ex.id, name: exName(ex) });
                             setPrInput("");
                           }
                         }}
@@ -159,17 +154,16 @@ export default function ProgressScreen() {
                       >
                         <View style={{ flex: 1 }}>
                           <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "600" }}>
-                            {ex.name}
+                            {exName(ex)}
                           </Text>
                           {pr && (
                             <Text style={{ color: theme.colors.muted, fontSize: 11, marginTop: 2 }}>
-                              {pr.date.slice(5).replace("-", "/")} · best
-                              {isNew ? " · today" : ""}
+                              {pr.date.slice(5).replace("-", "/")} · best{isNew ? " · today" : ""}
                             </Text>
                           )}
                         </View>
                         <Text style={{
-                          color: pr ? theme.colors.amberBright : theme.colors.muted,
+                          color: pr ? theme.colors.amber : theme.colors.muted,
                           fontSize: 17, fontWeight: "900", marginRight: 4,
                           shadowColor: pr ? theme.colors.amber : "transparent",
                           shadowOffset: { width: 0, height: 0 },
@@ -186,16 +180,11 @@ export default function ProgressScreen() {
                       </Pressable>
 
                       {isActive && (
-                        <View style={{
-                          paddingHorizontal: 16,
-                          paddingBottom: 14,
-                          flexDirection: "row",
-                          gap: 8,
-                        }}>
+                        <View style={{ paddingHorizontal: 16, paddingBottom: 14, flexDirection: "row", gap: 8 }}>
                           <TextInput
                             value={prInput}
                             onChangeText={setPrInput}
-                            placeholder={pr ? `Beat ${pr.weight}kg` : "weight in kg"}
+                            placeholder={pr ? `Beat ${pr.weight}kg` : t.weight_placeholder}
                             placeholderTextColor={theme.colors.muted}
                             keyboardType="decimal-pad"
                             returnKeyType="done"
@@ -208,10 +197,8 @@ export default function ProgressScreen() {
                               paddingHorizontal: 12,
                               paddingVertical: 10,
                               color: theme.colors.text,
-                              fontSize: 15,
-                              fontWeight: "700",
-                              borderWidth: 1,
-                              borderColor: theme.colors.amberDim,
+                              fontSize: 15, fontWeight: "700",
+                              borderWidth: 1, borderColor: theme.colors.amberDim,
                             }}
                           />
                           <Pressable
@@ -221,13 +208,9 @@ export default function ProgressScreen() {
                               borderRadius: theme.radius.sm,
                               paddingHorizontal: 16,
                               justifyContent: "center",
-                              shadowColor: theme.colors.amber,
-                              shadowOffset: { width: 0, height: 0 },
-                              shadowOpacity: 0.4,
-                              shadowRadius: 8,
                             }}
                           >
-                            <Text style={{ color: "#0D0D0D", fontWeight: "800", fontSize: 13 }}>SAVE</Text>
+                            <Text style={{ color: "#0D0D0D", fontWeight: "800", fontSize: 13 }}>{t.save}</Text>
                           </Pressable>
                         </View>
                       )}

@@ -13,6 +13,7 @@ import { useState, useEffect, useRef } from "react";
 import * as SQLite from "expo-sqlite";
 import { theme } from "../constants/theme";
 import { getTodayWorkout } from "../constants/data";
+import { useSettings } from "./SettingsContext";
 
 // Reusable animated press button
 function ScalePress({
@@ -40,7 +41,14 @@ function ScalePress({
 
 export default function SessionScreen() {
   const router = useRouter();
+  const { t, lang } = useSettings();
   const workout = getTodayWorkout();
+  const exName = (ex: any) => lang === "fr" && ex.name_fr ? ex.name_fr : ex.name;
+  const exCue = (ex: any) => lang === "fr" && ex.cue_fr ? ex.cue_fr : ex.cue;
+  const exTechnique = (ex: any) => lang === "fr" && ex.technique_fr ? ex.technique_fr : ex.technique;
+  const workoutName = workout
+    ? (lang === "fr" && (workout as any).name_fr ? (workout as any).name_fr : workout.name)
+    : "";
 
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [currentSet, setCurrentSet] = useState(1);
@@ -184,12 +192,12 @@ export default function SessionScreen() {
           width: "100%",
         }}>
           <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: "900", marginBottom: 6 }}>
-            End Session?
+            {t.session_end_title}
           </Text>
           <Text style={{ color: theme.colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 28 }}>
             {currentExerciseIndex > 0
-              ? `${currentExerciseIndex} of ${exercises.length} exercises done.`
-              : "Session just started."}{"\n"}Progress won't be saved.
+              ? t.session_exercises_done(currentExerciseIndex, exercises.length)
+              : t.session_just_started}{"\n"}{t.session_no_save}
           </Text>
           <View style={{ gap: 10 }}>
             <ScalePress
@@ -197,7 +205,7 @@ export default function SessionScreen() {
               style={{ borderRadius: theme.radius.md }}
             >
               <View style={{ backgroundColor: theme.colors.amber, borderRadius: theme.radius.md, paddingVertical: 15, alignItems: "center" }}>
-                <Text style={{ color: "#0D0D0D", fontWeight: "900", fontSize: 15 }}>Keep Going</Text>
+                <Text style={{ color: "#0D0D0D", fontWeight: "900", fontSize: 15 }}>{t.session_keep_going}</Text>
               </View>
             </ScalePress>
             <ScalePress
@@ -212,7 +220,7 @@ export default function SessionScreen() {
                 paddingVertical: 15,
                 alignItems: "center",
               }}>
-                <Text style={{ color: theme.colors.amberDim, fontWeight: "700", fontSize: 15 }}>End Session</Text>
+                <Text style={{ color: theme.colors.amberDim, fontWeight: "700", fontSize: 15 }}>{t.session_end}</Text>
               </View>
             </ScalePress>
           </View>
@@ -224,13 +232,13 @@ export default function SessionScreen() {
   if (!workout) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg, alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700", marginBottom: 8 }}>Rest Day</Text>
-        <Text style={{ color: theme.colors.muted, fontSize: 14, marginBottom: 32 }}>No session scheduled today.</Text>
+        <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700", marginBottom: 8 }}>{t.session_rest_day_title}</Text>
+        <Text style={{ color: theme.colors.muted, fontSize: 14, marginBottom: 32 }}>{t.session_no_session}</Text>
         <Pressable
           onPress={() => router.back()}
           style={{ backgroundColor: theme.colors.card, borderRadius: theme.radius.md, paddingHorizontal: 24, paddingVertical: 12 }}
         >
-          <Text style={{ color: theme.colors.amber, fontWeight: "700" }}>Go Back</Text>
+          <Text style={{ color: theme.colors.amber, fontWeight: "700" }}>{t.session_go_back}</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -241,18 +249,18 @@ export default function SessionScreen() {
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg, alignItems: "center", justifyContent: "center", padding: theme.spacing.lg }}>
         <Text style={{ fontSize: 72, marginBottom: 16 }}>🔥</Text>
         <Text style={{ color: theme.colors.amber, fontSize: 12, letterSpacing: 3, textTransform: "uppercase", marginBottom: 8 }}>
-          Session Complete
+          {t.session_complete}
         </Text>
         <Text style={{ color: theme.colors.text, fontSize: 36, fontWeight: "900", textAlign: "center", marginBottom: 8 }}>
-          {workout.name}
+          {workoutName}
         </Text>
         <Text style={{ color: theme.colors.muted, fontSize: 15, marginBottom: 56 }}>
-          {exercises.length} exercises crushed
+          {t.session_crushed(exercises.length)}
         </Text>
         <View style={{ ...theme.glow, borderRadius: theme.radius.md }}>
           <ScalePress onPress={() => router.back()}>
             <View style={{ backgroundColor: theme.colors.amber, borderRadius: theme.radius.md, paddingVertical: 16, paddingHorizontal: 56 }}>
-              <Text style={{ color: "#0D0D0D", fontSize: 16, fontWeight: "900", letterSpacing: 1 }}>DONE</Text>
+              <Text style={{ color: "#0D0D0D", fontSize: 16, fontWeight: "900", letterSpacing: 1 }}>{t.session_done}</Text>
             </View>
           </ScalePress>
         </View>
@@ -280,7 +288,7 @@ export default function SessionScreen() {
           <Ionicons name="close" size={24} color={theme.colors.muted} />
         </Pressable>
         <Text style={{ color: theme.colors.text, fontSize: 13, fontWeight: "700", letterSpacing: 1.5 }}>
-          {workout.name.toUpperCase()}
+          {workoutName.toUpperCase()}
         </Text>
         <Text style={{ color: theme.colors.textSecondary, fontSize: 13, fontWeight: "600" }}>
           {currentExerciseIndex + 1} / {exercises.length}
@@ -306,7 +314,7 @@ export default function SessionScreen() {
           /* ── REST SCREEN ── */
           <View style={{ alignItems: "center", paddingTop: 24 }}>
             <Text style={{ color: theme.colors.textSecondary, fontSize: 11, letterSpacing: 3, textTransform: "uppercase", marginBottom: 36 }}>
-              Rest
+              {t.session_rest}
             </Text>
 
             {/* Timer ring */}
@@ -325,18 +333,18 @@ export default function SessionScreen() {
               <Text style={{ color: theme.colors.amber, fontSize: 76, fontWeight: "900", lineHeight: 84 }}>
                 {restSecondsLeft}
               </Text>
-              <Text style={{ color: theme.colors.muted, fontSize: 12, letterSpacing: 1 }}>seconds</Text>
+              <Text style={{ color: theme.colors.muted, fontSize: 12, letterSpacing: 1 }}>{t.session_seconds}</Text>
             </View>
 
-            <Text style={{ color: theme.colors.textSecondary, fontSize: 13, marginBottom: 6 }}>Up next</Text>
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 13, marginBottom: 6 }}>{t.session_up_next}</Text>
             <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: "800", marginBottom: 6, textAlign: "center" }}>
               {restIsForExercise
-                ? (exercises[currentExerciseIndex + 1]?.name ?? "You're done!")
-                : currentExercise.name}
+                ? (exercises[currentExerciseIndex + 1] ? exName(exercises[currentExerciseIndex + 1]) : "You're done!")
+                : exName(currentExercise)}
             </Text>
             {!restIsForExercise && (
               <Text style={{ color: theme.colors.textSecondary, fontSize: 15, marginBottom: 36 }}>
-                Set {currentSet + 1} of {totalSets}
+                {t.session_set_of(currentSet + 1, totalSets)}
               </Text>
             )}
 
@@ -351,7 +359,7 @@ export default function SessionScreen() {
                 paddingVertical: 12,
                 paddingHorizontal: 32,
               }}>
-                <Text style={{ color: theme.colors.textSecondary, fontSize: 14, fontWeight: "600" }}>Skip Rest</Text>
+                <Text style={{ color: theme.colors.textSecondary, fontSize: 14, fontWeight: "600" }}>{t.session_skip_rest}</Text>
               </View>
             </ScalePress>
           </View>
@@ -376,11 +384,11 @@ export default function SessionScreen() {
             </View>
 
             <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>
-              Set {currentSet} of {totalSets}
+              {t.session_set_of(currentSet, totalSets)}
             </Text>
 
             <Text style={{ color: theme.colors.text, fontSize: 40, fontWeight: "900", letterSpacing: -1, marginBottom: 4, lineHeight: 46 }}>
-              {currentExercise.name}
+              {exName(currentExercise)}
             </Text>
 
             <Text style={{
@@ -392,7 +400,7 @@ export default function SessionScreen() {
               shadowOpacity: 0.5,
               shadowRadius: 8,
             }}>
-              {currentExercise.reps}{typeof currentExercise.reps === "number" ? " reps" : ""}
+              {currentExercise.reps}{typeof currentExercise.reps === "number" ? t.session_reps : ""}
             </Text>
 
             {/* PR Weight Card */}
@@ -414,7 +422,7 @@ export default function SessionScreen() {
                     {currentPR} kg
                   </Text>
                   <Text style={{ color: theme.colors.amberDim, fontSize: 11, marginTop: 1 }}>
-                    Your PR — use as working weight
+                    {t.session_pr_hint}
                   </Text>
                 </View>
               </View>
@@ -434,21 +442,21 @@ export default function SessionScreen() {
                 style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: theme.spacing.md }}
               >
                 <Text style={{ color: theme.colors.amber, fontSize: 11, letterSpacing: 1.5, fontWeight: "700", textTransform: "uppercase" }}>
-                  Technique
+                  {t.session_technique}
                 </Text>
                 <Animated.View style={{ transform: [{ rotate: chevronAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] }) }] }}>
                   <Ionicons name="chevron-down" size={16} color={theme.colors.muted} />
                 </Animated.View>
               </Pressable>
               <Text style={{ color: theme.colors.textSecondary, fontSize: 14, lineHeight: 22, paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.md }}>
-                {currentExercise.cue}
+                {exCue(currentExercise)}
               </Text>
               <Animated.View style={{
                 maxHeight: expandAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 200] }),
                 overflow: "hidden",
               }}>
                 <Text style={{ color: theme.colors.textSecondary, fontSize: 14, lineHeight: 22, paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.md }}>
-                  {currentExercise.technique}
+                  {exTechnique(currentExercise)}
                 </Text>
               </Animated.View>
             </View>
@@ -478,9 +486,8 @@ export default function SessionScreen() {
                   gap: 10,
                 }}
               >
-                <Ionicons name="checkmark" size={24} color="#0D0D0D" />
-                <Text style={{ color: "#0D0D0D", fontSize: 18, fontWeight: "900", letterSpacing: 0.5 }}>
-                  {isLastSet && isLastExercise ? "FINISH SESSION" : "SET DONE"}
+                  <Text style={{ color: "#0D0D0D", fontSize: 18, fontWeight: "900", letterSpacing: 0.5 }}>
+                  {isLastSet && isLastExercise ? t.session_finish : t.session_set_done}
                 </Text>
               </Pressable>
             </Animated.View>
@@ -489,7 +496,7 @@ export default function SessionScreen() {
             {currentExerciseIndex < exercises.length - 1 && (
               <View>
                 <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
-                  Coming Up
+                  {t.session_coming_up}
                 </Text>
                 <View style={{
                   backgroundColor: theme.colors.card,
@@ -506,7 +513,7 @@ export default function SessionScreen() {
                           {String(currentExerciseIndex + i + 2).padStart(2, "0")}
                         </Text>
                         <Text style={{ color: theme.colors.textSecondary, fontSize: 14, fontWeight: "600", flex: 1 }}>
-                          {ex.name}
+                          {exName(ex)}
                         </Text>
                         <Text style={{ color: theme.colors.muted, fontSize: 12 }}>
                           {ex.sets}×{ex.reps}

@@ -8,16 +8,25 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useState, useRef, useEffect } from "react";
 import { theme } from "../../constants/theme";
 import { getTodayMenu, getTodayKey, MENU_DATA, type DayKey } from "../../constants/data";
+import { useSettings } from "../SettingsContext";
 
 const DAY_ORDER: DayKey[] = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+const DAY_KEY_INDEX: Record<DayKey, number> = {
+  sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6,
+};
 
 const EXPANDED_HEIGHT = 1200;
 
 function ExpandableDay({ dayKey, isToday }: { dayKey: DayKey; isToday: boolean }) {
   const day = MENU_DATA[dayKey];
+  const { t, lang } = useSettings();
+  const mealName = (meal: any) => lang === "fr" && meal.name_fr ? meal.name_fr : meal.name;
+  const mealDetails = (meal: any) => lang === "fr" && meal.details_fr ? meal.details_fr : meal.details;
   const [isOpen, setIsOpen] = useState(false);
   const anim = useRef(new Animated.Value(0)).current;
   const chevronAnim = useRef(new Animated.Value(0)).current;
@@ -39,7 +48,6 @@ function ExpandableDay({ dayKey, isToday }: { dayKey: DayKey; isToday: boolean }
       borderWidth: 1,
       borderColor: isToday ? theme.colors.glowBorder : theme.colors.border,
       overflow: "hidden",
-      ...(isToday ? theme.glow : {}),
     }}>
       <Pressable
         onPress={toggle}
@@ -47,7 +55,7 @@ function ExpandableDay({ dayKey, isToday }: { dayKey: DayKey; isToday: boolean }
       >
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 3 }}>
-            <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: "700" }}>{day.label}</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: "700" }}>{t.days[DAY_KEY_INDEX[dayKey]]}</Text>
             {isToday && (
               <View style={{
                 backgroundColor: theme.colors.amberSubtle,
@@ -57,12 +65,14 @@ function ExpandableDay({ dayKey, isToday }: { dayKey: DayKey; isToday: boolean }
                 borderWidth: 1,
                 borderColor: theme.colors.amberDeep,
               }}>
-                <Text style={{ color: theme.colors.amber, fontSize: 9, fontWeight: "700", letterSpacing: 1 }}>TODAY</Text>
+                <Text style={{ color: theme.colors.amber, fontSize: 9, fontWeight: "700", letterSpacing: 1 }}>
+                  {t.today_badge}
+                </Text>
               </View>
             )}
           </View>
           <Text style={{ color: isOpen ? theme.colors.amber : theme.colors.muted, fontSize: 11 }}>
-            {day.type === "gym" ? "⚡ Gym Day" : "Rest Day"} · {day.totals.kcal} kcal · {day.totals.protein}g protein
+            {day.type === "gym" ? `⚡ ${t.gym_day}` : t.rest_day} · {day.totals.kcal} kcal · {day.totals.protein}g {t.protein.toLowerCase()}
           </Text>
         </View>
         <Animated.View style={{ transform: [{ rotate: chevronRotate }] }}>
@@ -82,19 +92,19 @@ function ExpandableDay({ dayKey, isToday }: { dayKey: DayKey; isToday: boolean }
             }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                 <Text style={{ color: theme.colors.text, fontWeight: "700", fontSize: 13, flex: 1, marginRight: 8 }}>
-                  {meal.name}
+                  {mealName(meal)}
                 </Text>
                 <Text style={{ color: theme.colors.amber, fontWeight: "800", fontSize: 13 }}>{meal.time}</Text>
               </View>
               <Text style={{ color: theme.colors.textSecondary, fontSize: 12, lineHeight: 17, marginBottom: 8 }}>
-                {meal.details}
+                {mealDetails(meal)}
               </Text>
               <View style={{ flexDirection: "row", gap: 6 }}>
                 {[
-                  { label: "kcal", value: String(meal.kcal), color: theme.colors.amber },
-                  { label: "pro", value: `${meal.protein}g`, color: theme.colors.text },
-                  { label: "carbs", value: `${meal.carbs}g`, color: theme.colors.text },
-                  { label: "fat", value: `${meal.fat}g`, color: theme.colors.text },
+                  { label: t.kcal.toLowerCase(), value: String(meal.kcal), color: theme.colors.amber },
+                  { label: t.pro.toLowerCase(), value: `${meal.protein}g`, color: theme.colors.text },
+                  { label: t.carbs_label.toLowerCase(), value: `${meal.carbs}g`, color: theme.colors.text },
+                  { label: t.fat_label.toLowerCase(), value: `${meal.fat}g`, color: theme.colors.text },
                 ].map(({ label, value, color }) => (
                   <View key={label} style={{
                     flex: 1, backgroundColor: theme.colors.card,
@@ -115,11 +125,11 @@ function ExpandableDay({ dayKey, isToday }: { dayKey: DayKey; isToday: boolean }
 
 function WeeklyMenuModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const todayKey = getTodayKey();
+  const { t } = useSettings();
 
   return (
-    <Modal visible={visible} animationType="slide" statusBarTranslucent>
+    <Modal visible={visible} animationType="slide" statusBarTranslucent onRequestClose={onClose}>
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={["top"]}>
-        {/* Header */}
         <View style={{
           flexDirection: "row",
           justifyContent: "space-between",
@@ -130,16 +140,13 @@ function WeeklyMenuModal({ visible, onClose }: { visible: boolean; onClose: () =
         }}>
           <View>
             <Text style={{ color: theme.colors.textSecondary, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 2 }}>
-              Planning
+              {t.planning}
             </Text>
             <Text style={{ color: theme.colors.text, fontSize: 28, fontWeight: "800", letterSpacing: -0.5 }}>
-              Weekly Menu
+              {t.weekly_menu}
             </Text>
           </View>
-          <Pressable
-            onPress={onClose}
-            style={{ padding: 8 }}
-          >
+          <Pressable onPress={onClose} style={{ padding: 8 }}>
             <Ionicons name="close" size={24} color={theme.colors.muted} />
           </Pressable>
         </View>
@@ -159,9 +166,11 @@ function WeeklyMenuModal({ visible, onClose }: { visible: boolean; onClose: () =
 
 export default function MealsScreen() {
   const todayMenu = getTodayMenu();
+  const { t, lang } = useSettings();
+  const mealName = (meal: any) => lang === "fr" && meal.name_fr ? meal.name_fr : meal.name;
+  const mealDetails = (meal: any) => lang === "fr" && meal.details_fr ? meal.details_fr : meal.details;
   const [weeklyVisible, setWeeklyVisible] = useState(false);
 
-  // Entrance animations
   const anims = useRef([0, 1, 2].map(() => new Animated.Value(0))).current;
   useEffect(() => {
     Animated.stagger(80,
@@ -173,17 +182,14 @@ export default function MealsScreen() {
     transform: [{ translateY: anims[i].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
   });
 
-  const parseTime = (t: string) => {
-    const [h, m] = t.split(":").map(Number);
+  const parseTime = (time: string) => {
+    const [h, m] = time.split(":").map(Number);
     return h * 60 + m;
   };
 
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-  const nextMealIndex = todayMenu.meals.findIndex(
-    (ml) => parseTime(ml.time) > currentMinutes
-  );
+  const nextMealIndex = todayMenu.meals.findIndex((ml) => parseTime(ml.time) > currentMinutes);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={["top"]}>
@@ -197,37 +203,40 @@ export default function MealsScreen() {
         {/* Header */}
         <Animated.View style={[{ marginBottom: theme.spacing.xl }, animStyle(0)]}>
           <Text style={{ color: theme.colors.textSecondary, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>
-            Nutrition
+            {t.nutrition}
           </Text>
           <Text style={{ color: theme.colors.text, fontSize: 32, fontWeight: "800", letterSpacing: -0.5 }}>
-            Today's Meals
+            {t.todays_meals}
           </Text>
         </Animated.View>
 
-        {/* Daily totals bar */}
-        <Animated.View style={animStyle(0)}>
-          <View style={{
-            backgroundColor: theme.colors.amberSubtle,
-            borderRadius: theme.radius.lg,
-            borderWidth: 1,
-            borderColor: theme.colors.amberDim,
-            padding: theme.spacing.md,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginBottom: theme.spacing.lg,
-          }}>
+        {/* Daily totals bar — LinearGradient for depth */}
+        <Animated.View style={[{ marginBottom: theme.spacing.lg }, animStyle(0)]}>
+          <LinearGradient
+            colors={["rgba(245,158,11,0.14)", "rgba(245,158,11,0.04)"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              borderRadius: theme.radius.lg,
+              borderWidth: 1,
+              borderColor: theme.colors.amberDim,
+              padding: theme.spacing.md,
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
             {[
-              { label: "Calories", value: `${todayMenu.totals.kcal}`, color: theme.colors.amber },
-              { label: "Protein", value: `${todayMenu.totals.protein}g`, color: theme.colors.text },
-              { label: "Carbs", value: `${todayMenu.totals.carbs}g`, color: theme.colors.text },
-              { label: "Fat", value: `${todayMenu.totals.fat}g`, color: theme.colors.text },
+              { label: t.calories, value: `${todayMenu.totals.kcal}`, color: theme.colors.amber },
+              { label: t.protein, value: `${todayMenu.totals.protein}g`, color: theme.colors.text },
+              { label: t.carbs, value: `${todayMenu.totals.carbs}g`, color: theme.colors.text },
+              { label: t.fat, value: `${todayMenu.totals.fat}g`, color: theme.colors.text },
             ].map(({ label, value, color }) => (
               <View key={label} style={{ alignItems: "center" }}>
                 <Text style={{ color, fontSize: 16, fontWeight: "800" }}>{value}</Text>
                 <Text style={{ color: theme.colors.muted, fontSize: 10, marginTop: 1 }}>{label}</Text>
               </View>
             ))}
-          </View>
+          </LinearGradient>
         </Animated.View>
 
         {/* Meal cards */}
@@ -246,32 +255,28 @@ export default function MealsScreen() {
                 overflow: "hidden",
                 opacity: isPast ? 0.45 : 1,
               }}>
-                {isNext && <View style={{ height: 2, backgroundColor: theme.colors.amber }} />}
                 <View style={{ padding: theme.spacing.md }}>
                   <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                     <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: "700", flex: 1 }}>
-                      {meal.name}
+                      {mealName(meal)}
                     </Text>
                     <Text style={{ color: isNext ? theme.colors.amber : theme.colors.muted, fontSize: 13, fontWeight: "700" }}>
                       {meal.time}
                     </Text>
                   </View>
                   <Text style={{ color: theme.colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 12 }}>
-                    {meal.details}
+                    {mealDetails(meal)}
                   </Text>
                   <View style={{ flexDirection: "row", gap: 8 }}>
                     {[
-                      { label: "KCAL", value: meal.kcal, color: theme.colors.amber },
-                      { label: "PRO", value: `${meal.protein}g`, color: theme.colors.text },
-                      { label: "CARBS", value: `${meal.carbs}g`, color: theme.colors.text },
-                      { label: "FAT", value: `${meal.fat}g`, color: theme.colors.text },
+                      { label: t.kcal, value: String(meal.kcal), color: theme.colors.amber },
+                      { label: t.pro, value: `${meal.protein}g`, color: theme.colors.text },
+                      { label: t.carbs_label, value: `${meal.carbs}g`, color: theme.colors.text },
+                      { label: t.fat_label, value: `${meal.fat}g`, color: theme.colors.text },
                     ].map(({ label, value, color }) => (
                       <View key={label} style={{
-                        flex: 1,
-                        backgroundColor: theme.colors.cardElevated,
-                        borderRadius: theme.radius.sm,
-                        padding: 6,
-                        alignItems: "center",
+                        flex: 1, backgroundColor: theme.colors.cardElevated,
+                        borderRadius: theme.radius.sm, padding: 6, alignItems: "center",
                       }}>
                         <Text style={{ color, fontSize: 12, fontWeight: "800" }}>{value}</Text>
                         <Text style={{ color: theme.colors.muted, fontSize: 9, letterSpacing: 0.5 }}>{label}</Text>
@@ -310,8 +315,8 @@ export default function MealsScreen() {
                 <Ionicons name="calendar-outline" size={18} color={theme.colors.amber} />
               </View>
               <View>
-                <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "700" }}>Weekly Menu</Text>
-                <Text style={{ color: theme.colors.muted, fontSize: 12, marginTop: 1 }}>Browse all 7 days · plan groceries</Text>
+                <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "700" }}>{t.weekly_menu}</Text>
+                <Text style={{ color: theme.colors.muted, fontSize: 12, marginTop: 1 }}>{t.weekly_menu_sub}</Text>
               </View>
             </View>
             <Ionicons name="chevron-forward" size={18} color={theme.colors.muted} />
