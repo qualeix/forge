@@ -12,7 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useState, useRef, useEffect } from "react";
 import { theme } from "../../constants/theme";
 import { getTodayMenu, getTodayKey, MENU_DATA, type DayKey } from "../../constants/data";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../constants/SettingsContext";
 
 const DAY_ORDER: DayKey[] = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 

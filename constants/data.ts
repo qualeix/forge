@@ -111,7 +111,7 @@ export const WORKOUT_DATA = {
         sets: 4,
         reps: 10,
         cue: "Squeeze shoulder blades together at full contraction — that's the rep.",
-        cue_fr: "Squeeze des omoplates à la contraction complète — c'est ça, la rep.",
+        cue_fr: "Contracte les omoplates à la contraction complète — c'est ça, la rep.",
         technique:
           "Keep torso upright and still. Pull to lower chest/upper abdomen. Elbows close to torso. 3s return to start, full stretch at front. Don't shrug.",
         technique_fr:
@@ -137,7 +137,7 @@ export const WORKOUT_DATA = {
         sets: 3,
         reps: 15,
         cue: "At full extension, squeeze the rear delts for 1s.",
-        cue_fr: "À l'extension complète, squeeze des deltoïdes postérieurs 1s.",
+        cue_fr: "À l'extension complète, contracte les deltoïdes postérieurs 1s.",
         technique:
           "Handles at shoulder height, chest lightly against pad. Elbows slightly soft. Push handles out and back, lead with elbows. Very slow return (3-4s). Weight should feel embarrassingly light — that's correct.",
         technique_fr:
@@ -157,17 +157,17 @@ export const WORKOUT_DATA = {
           "Descendre aussi bas que confortable, remonter complètement. Commencer à 5-8kg max. Sensation de chaleur normale. Douleur vive ou craquement — arrêt immédiat.",
       },
       {
-        id: "reverse_wrist_curls",
-        name: "Reverse Wrist Curls",
-        name_fr: "Curl inversé des poignets",
+        id: "preacher_curls",
+        name: "Preacher Curls",
+        name_fr: "Curl au pupitre",
         sets: 3,
-        reps: 15,
-        cue: "Same as wrist curls but palms facing down.",
-        cue_fr: "Identique aux curl poignets, mais paumes vers le bas.",
+        reps: 10,
+        cue: "Strict isolation — the pad removes all momentum.",
+        cue_fr: "Isolation stricte — le pupitre élimine tout élan.",
         technique:
-          "Even lighter than wrist curls. Full range: lower wrist fully, raise fully. Slow and deliberate. Balances forearm development.",
+          "Adjust pad so armpits rest on top edge. Arms fully extended at bottom — don't hyperextend elbows. Curl to full contraction, squeeze 1s at top. Lower in 3s — control the negative. Keep wrists neutral, don't curl them.",
         technique_fr:
-          "Encore plus léger qu'en curl normal. Amplitude complète : descente et remontée totales du poignet. Lent et précis. Équilibre le développement de l'avant-bras.",
+          "Règle le pupitre pour que les aisselles reposent sur le bord supérieur. Bras en extension complète en bas — pas d'hyperextension des coudes. Curl jusqu'à contraction complète, contracte 1s en haut. Descente en 3s — contrôle la phase négative. Poignets neutres, ne pas les fléchir.",
       },
     ],
   },
@@ -197,7 +197,7 @@ export const WORKOUT_DATA = {
         sets: 4,
         reps: 10,
         cue: "Drive through your heels. Squeeze glutes hard at full extension.",
-        cue_fr: "Pousse à travers les talons. Squeeze des fessiers fort en extension complète.",
+        cue_fr: "Pousse à travers les talons. Contracte les fessiers fort en extension complète.",
         technique:
           "At top, torso parallel to floor — don't hyperextend lower back. Full range down for glute stretch. Pause 1-2s at top with glutes contracted.",
         technique_fr:
@@ -227,7 +227,7 @@ export const WORKOUT_DATA = {
         technique:
           "Lower heel FULLY below platform edge. Pause 1s at bottom. Rise to full plantar flexion, squeeze hard, pause 1s at top. 3s down. If it burns, you're doing it right.",
         technique_fr:
-          "Talons ENTIÈREMENT sous le bord de la plateforme. Pause 1s en bas. Montée en flexion plantaire complète, squeeze fort, pause 1s en haut. 3s descente. Si ça brûle, c'est bien.",
+          "Talons ENTIÈREMENT sous le bord de la plateforme. Pause 1s en bas. Montée en flexion plantaire complète, contracte fort, pause 1s en haut. 3s descente. Si ça brûle, c'est bien.",
       },
       {
         id: "leg_curl",
@@ -273,7 +273,7 @@ export const WORKOUT_DATA = {
         technique:
           "Squeeze glutes and core simultaneously. Eyes down, forearms flat, elbows under shoulders. Add 5-10s per week when it feels comfortable.",
         technique_fr:
-          "Squeeze fessiers et abdos simultanément. Regard vers le bas, avant-bras à plat, coudes sous les épaules. Ajouter 5-10s par semaine quand c'est confortable.",
+          "Contracte fessiers et abdos simultanément. Regard vers le bas, avant-bras à plat, coudes sous les épaules. Ajouter 5-10s par semaine quand c'est confortable.",
       },
       {
         id: "side_abs",
@@ -641,8 +641,9 @@ export type DayKey = keyof typeof MENU_DATA;
 export type WorkoutKey = keyof typeof WORKOUT_DATA;
 
 export function getTodayKey(): DayKey {
-  const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
-  return days[new Date().getDay()];
+  //const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
+  //return days[new Date().getDay()];
+  return "tuesday";
 }
 
 export function getTodayWorkout() {

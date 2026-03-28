@@ -1,26 +1,23 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import * as SQLite from "expo-sqlite";
-import { translations, type Lang, type Translations } from "../constants/i18n";
+import { translations, type Lang, type Translations } from "./i18n";
 
 type SettingsCtx = {
   lang: Lang;
   setLang: (l: Lang) => void;
   t: Translations;
-  notificationsEnabled: boolean;
-  setNotificationsEnabled: (v: boolean) => void;
+  db: SQLite.SQLiteDatabase | null;
 };
 
 const SettingsContext = createContext<SettingsCtx>({
   lang: "en",
   setLang: () => {},
   t: translations.en,
-  notificationsEnabled: true,
-  setNotificationsEnabled: () => {},
+  db: null,
 });
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
-  const [notificationsEnabled, setNotifState] = useState(true);
   const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
 
   useEffect(() => {
@@ -35,11 +32,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const langRow = await database.getFirstAsync<{ value: string }>(
         "SELECT value FROM settings WHERE key = 'language'"
       );
-      const notifRow = await database.getFirstAsync<{ value: string }>(
-        "SELECT value FROM settings WHERE key = 'notifications'"
-      );
       if (langRow) setLangState(langRow.value as Lang);
-      if (notifRow) setNotifState(notifRow.value === "1");
       setDb(database);
     }
     init();
@@ -55,19 +48,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const setNotificationsEnabled = (v: boolean) => {
-    setNotifState(v);
-    if (db) {
-      db.runAsync(
-        "INSERT OR REPLACE INTO settings (key, value) VALUES ('notifications', ?)",
-        [v ? "1" : "0"]
-      ).catch(() => {});
-    }
-  };
-
   return (
     <SettingsContext.Provider
-      value={{ lang, setLang, t: translations[lang], notificationsEnabled, setNotificationsEnabled }}
+      value={{ lang, setLang, t: translations[lang], db }}
     >
       {children}
     </SettingsContext.Provider>

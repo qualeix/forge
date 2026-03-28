@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Animated, Pressable } from "react-native";
 import { useRef } from "react";
 import { theme } from "../../constants/theme";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../constants/SettingsContext";
 
 function AnimatedTabButton(props: any) {
   const scale = useRef(new Animated.Value(1)).current;

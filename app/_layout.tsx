@@ -1,13 +1,15 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { SettingsProvider } from "./SettingsContext";
+import { SettingsProvider } from "../constants/SettingsContext";
 import "../global.css";
 
 export default function RootLayout() {
   return (
     <SettingsProvider>
       <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#0D0D0D" } }} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#0D0D0D" } }}>
+        <Stack.Screen name="session" options={{ gestureEnabled: false }} />
+      </Stack>
     </SettingsProvider>
   );
 }

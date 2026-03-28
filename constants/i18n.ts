@@ -25,18 +25,19 @@ export type Translations = {
   // Progress screen
   tracking: string;
   progress: string;
-  personal_records: string;
+  weights_title: string;
   push_day: string;
   pull_day: string;
   leg_day: string;
   save: string;
   weight_placeholder: string;
+  weight_current: string;
+  weight_today: string;
+  weight_max_error: string;
   // Settings screen
   settings: string;
   preferences: string;
   language: string;
-  notifications: string;
-  notifications_sub: string;
   // Macro labels (short)
   kcal: string;
   pro: string;
@@ -52,13 +53,14 @@ export type Translations = {
   date_locale: string;
   exercises_rest: (n: number, rest: number) => string;
   // Session screen
+  session_times_up: string;
   session_rest: string;
   session_seconds: string;
   session_up_next: string;
   session_set_of: (s: number, total: number) => string;
   session_skip_rest: string;
   session_technique: string;
-  session_pr_hint: string;
+  session_weight_hint: string;
   session_reps: string;
   session_set_done: string;
   session_finish: string;
@@ -102,18 +104,19 @@ export const translations: Record<Lang, Translations> = {
 
     tracking: "Tracking",
     progress: "Progress",
-    personal_records: "Personal Records",
+    weights_title: "Weights",
     push_day: "Push Day",
     pull_day: "Pull Day",
     leg_day: "Leg Day",
     save: "OK",
     weight_placeholder: "Weight in kg",
+    weight_current: "current",
+    weight_today: "today",
+    weight_max_error: "250kg max",
 
     settings: "Settings",
     preferences: "Preferences",
     language: "Language",
-    notifications: "Notifications",
-    notifications_sub: "Daily reminders for meals & sessions",
 
     kcal: "KCAL",
     pro: "PRO",
@@ -127,13 +130,14 @@ export const translations: Record<Lang, Translations> = {
     today_badge: "TODAY",
     date_locale: "en-GB",
     exercises_rest: (n, rest) => `${n} exercises · ${rest}s rest`,
+    session_times_up: "Time's up!",
     session_rest: "Rest",
     session_seconds: "seconds",
     session_up_next: "Up next",
     session_set_of: (s, total) => `Set ${s} of ${total}`,
     session_skip_rest: "Skip Rest",
     session_technique: "Technique",
-    session_pr_hint: "Your PR — use as working weight",
+    session_weight_hint: "Your weight — use as reference",
     session_reps: " reps",
     session_set_done: "SET DONE",
     session_finish: "FINISH SESSION",
@@ -175,18 +179,19 @@ export const translations: Record<Lang, Translations> = {
 
     tracking: "Suivi",
     progress: "Progrès",
-    personal_records: "Records Perso",
+    weights_title: "Poids",
     push_day: "Poussée",
     pull_day: "Tirage",
     leg_day: "Jambes",
     save: "OK",
     weight_placeholder: "Poids en kg",
+    weight_current: "actuel",
+    weight_today: "auj.",
+    weight_max_error: "250kg max",
 
     settings: "Réglages",
     preferences: "Préférences",
     language: "Langue",
-    notifications: "Notifications",
-    notifications_sub: "Rappels quotidiens pour repas & séances",
 
     kcal: "KCAL",
     pro: "PROT",
@@ -200,13 +205,14 @@ export const translations: Record<Lang, Translations> = {
     today_badge: "AUJOURD'HUI",
     date_locale: "fr-FR",
     exercises_rest: (n, rest) => `${n} exercices · ${rest}s repos`,
+    session_times_up: "Temps écoulé !",
     session_rest: "Repos",
     session_seconds: "secondes",
     session_up_next: "Prochain",
     session_set_of: (s, total) => `Série ${s} sur ${total}`,
     session_skip_rest: "Passer",
     session_technique: "Technique",
-    session_pr_hint: "Ton RP — utilise comme poids de travail",
+    session_weight_hint: "Ton poids — utilise comme référence",
     session_reps: " rép.",
     session_set_done: "SÉRIE TERMINÉE",
     session_finish: "TERMINER",

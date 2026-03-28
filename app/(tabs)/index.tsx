@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { theme } from "../../constants/theme";
 import { getTodayMenu, getTodayWorkout } from "../../constants/data";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../constants/SettingsContext";
 
 export default function TodayScreen() {
   const router = useRouter();

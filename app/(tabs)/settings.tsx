@@ -3,7 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRef, useEffect } from "react";
 import { theme } from "../../constants/theme";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../constants/SettingsContext";
 import type { Lang } from "../../constants/i18n";
 
 function SettingRow({
@@ -87,63 +87,12 @@ function LangToggle({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void 
   );
 }
 
-function Toggle({
-  value,
-  onChange,
-}: {
-  value: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
-
-  useEffect(() => {
-    Animated.spring(anim, {
-      toValue: value ? 1 : 0,
-      useNativeDriver: false,
-      tension: 220,
-      friction: 7,
-    }).start();
-  }, [value]);
-
-  const translateX = anim.interpolate({ inputRange: [0, 1], outputRange: [2, 22] });
-  const bgColor = anim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [theme.colors.cardElevated, theme.colors.amber],
-  });
-
-  return (
-    <Pressable onPress={() => onChange(!value)}>
-      <Animated.View
-        style={{
-          width: 46,
-          height: 26,
-          borderRadius: 13,
-          backgroundColor: bgColor,
-          borderWidth: 1,
-          borderColor: value ? theme.colors.amberDim : theme.colors.border,
-          justifyContent: "center",
-        }}
-      >
-        <Animated.View
-          style={{
-            width: 20,
-            height: 20,
-            borderRadius: 10,
-            backgroundColor: value ? "#0D0D0D" : theme.colors.muted,
-            transform: [{ translateX }],
-          }}
-        />
-      </Animated.View>
-    </Pressable>
-  );
-}
-
 function Divider() {
   return <View style={{ height: 1, backgroundColor: theme.colors.border, marginHorizontal: theme.spacing.md }} />;
 }
 
 export default function SettingsScreen() {
-  const { lang, setLang, t, notificationsEnabled, setNotificationsEnabled } = useSettings();
+  const { lang, setLang, t } = useSettings();
 
   const anims = useRef([0, 1, 2].map(() => new Animated.Value(0))).current;
   useEffect(() => {
@@ -195,44 +144,8 @@ export default function SettingsScreen() {
             <SettingRow icon="language-outline" label={t.language}>
               <LangToggle lang={lang} setLang={setLang} />
             </SettingRow>
-
-            <Divider />
-
-            <SettingRow
-              icon="notifications-outline"
-              label={t.notifications}
-              sub={t.notifications_sub}
-            >
-              <Toggle value={notificationsEnabled} onChange={setNotificationsEnabled} />
-            </SettingRow>
           </View>
         </Animated.View>
-
-        {/* Notification note */}
-        {notificationsEnabled && (
-          <Animated.View style={animStyle(1)}>
-            <View
-              style={{
-                backgroundColor: theme.colors.amberSubtle,
-                borderRadius: theme.radius.md,
-                borderWidth: 1,
-                borderColor: theme.colors.amberDeep,
-                padding: theme.spacing.md,
-                flexDirection: "row",
-                gap: 10,
-                alignItems: "flex-start",
-                marginBottom: theme.spacing.md,
-              }}
-            >
-              <Ionicons name="information-circle-outline" size={16} color={theme.colors.amberDim} style={{ marginTop: 1 }} />
-              <Text style={{ color: theme.colors.textSecondary, fontSize: 12, flex: 1, lineHeight: 18 }}>
-                {lang === "fr"
-                  ? "Les notifications seront disponibles dans la version finale de l'application."
-                  : "Notifications will be available in the final app build."}
-              </Text>
-            </View>
-          </Animated.View>
-        )}
 
         {/* About card */}
         <Animated.View style={animStyle(2)}>
@@ -245,8 +158,8 @@ export default function SettingsScreen() {
               overflow: "hidden",
             }}
           >
-            <SettingRow icon="flame-outline" label="FORGE" sub={lang === "fr" ? "Version 2.0" : "Version 2.0"}>
-              <Text style={{ color: theme.colors.muted, fontSize: 12 }}>v2</Text>
+            <SettingRow icon="flame-outline" label="FORGE" sub={lang === "fr" ? "Version 3.0" : "Version 3.0"}>
+              <Text style={{ color: theme.colors.muted, fontSize: 12 }}>v3</Text>
             </SettingRow>
           </View>
         </Animated.View>

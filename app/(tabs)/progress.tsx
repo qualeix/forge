@@ -9,22 +9,20 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect, useCallback, useRef } from "react";
-import * as SQLite from "expo-sqlite";
 import { theme } from "../../constants/theme";
 import { WORKOUT_DATA } from "../../constants/data";
-import { useSettings } from "../SettingsContext";
+import { useSettings } from "../../constants/SettingsContext";
 
-type PRRow = { exercise_id: string; weight: number; date: string };
+type WeightRow = { exercise_id: string; weight: number; date: string };
 
 export default function ProgressScreen() {
-  const { t, lang } = useSettings();
+  const { t, lang, db } = useSettings();
   const exName = (ex: any) => lang === "fr" && ex.name_fr ? ex.name_fr : ex.name;
-  const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
-  const [prMap, setPrMap] = useState<Record<string, PRRow>>({});
-  const [activePR, setActivePR] = useState<{ id: string; name: string } | null>(null);
-  const [prInput, setPrInput] = useState("");
+  const [weightMap, setWeightMap] = useState<Record<string, WeightRow>>({});
+  const [activeExercise, setActiveExercise] = useState<{ id: string; name: string } | null>(null);
+  const [weightInput, setWeightInput] = useState("");
+  const [inputError, setInputError] = useState(false);
 
-  // Use useNativeDriver: false so elevation shadows animate with opacity
   const anims = useRef([0, 1, 2, 3].map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
@@ -42,34 +40,43 @@ export default function ProgressScreen() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const loadData = useCallback(async (database: SQLite.SQLiteDatabase) => {
-    const prs = await database.getAllAsync<PRRow>(
-      "SELECT exercise_id, MAX(weight) as weight, date FROM pr_entries GROUP BY exercise_id"
+  const loadData = useCallback(async (database: any) => {
+    const rows = await database.getAllAsync(
+      "SELECT exercise_id, weight, date FROM pr_entries"
     );
-    const map: Record<string, PRRow> = {};
-    prs.forEach((pr) => { map[pr.exercise_id] = pr; });
-    setPrMap(map);
+    const map: Record<string, WeightRow> = {};
+    rows.forEach((r: WeightRow) => { map[r.exercise_id] = r; });
+    setWeightMap(map);
   }, []);
 
   useEffect(() => {
-    async function init() {
-      const database = await SQLite.openDatabaseAsync("forge.db");
-      setDb(database);
-      await loadData(database);
-    }
-    init();
-  }, [loadData]);
+    if (db) loadData(db);
+  }, [db, loadData]);
 
-  const logPR = async () => {
-    if (!db || !activePR) return;
-    const w = parseFloat(prInput);
+  const saveWeight = async () => {
+    if (!db || !activeExercise) return;
+    const w = parseFloat(weightInput);
     if (!w || w <= 0) return;
+    if (w > 250) {
+      setInputError(true);
+      return;
+    }
+    setInputError(false);
+    await db.runAsync("DELETE FROM pr_entries WHERE exercise_id = ?", [activeExercise.id]);
     await db.runAsync(
       "INSERT INTO pr_entries (exercise_id, weight, date) VALUES (?, ?, ?)",
-      [activePR.id, w, today]
+      [activeExercise.id, w, today]
     );
-    setPrInput("");
-    setActivePR(null);
+    setWeightInput("");
+    setActiveExercise(null);
+    await loadData(db);
+  };
+
+  const clearWeight = async () => {
+    if (!db || !activeExercise) return;
+    await db.runAsync("DELETE FROM pr_entries WHERE exercise_id = ?", [activeExercise.id]);
+    setWeightInput("");
+    setActiveExercise(null);
     await loadData(db);
   };
 
@@ -105,7 +112,7 @@ export default function ProgressScreen() {
             color: theme.colors.textSecondary,
             fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12,
           }}>
-            {t.personal_records}
+            {t.weights_title}
           </Text>
         </Animated.View>
 
@@ -132,9 +139,9 @@ export default function ProgressScreen() {
                 overflow: "hidden",
               }}>
                 {group.exercises.map((ex, i) => {
-                  const pr = prMap[ex.id];
-                  const isActive = activePR?.id === ex.id;
-                  const isNew = pr && pr.date === today;
+                  const entry = weightMap[ex.id];
+                  const isActive = activeExercise?.id === ex.id;
+                  const isToday = entry && entry.date === today;
                   return (
                     <View key={ex.id}>
                       {i > 0 && (
@@ -143,11 +150,13 @@ export default function ProgressScreen() {
                       <Pressable
                         onPress={() => {
                           if (isActive) {
-                            setActivePR(null);
-                            setPrInput("");
+                            setActiveExercise(null);
+                            setWeightInput("");
+                            setInputError(false);
                           } else {
-                            setActivePR({ id: ex.id, name: exName(ex) });
-                            setPrInput("");
+                            setActiveExercise({ id: ex.id, name: exName(ex) });
+                            setWeightInput("");
+                            setInputError(false);
                           }
                         }}
                         style={{ flexDirection: "row", alignItems: "center", padding: 16, gap: 12 }}
@@ -156,21 +165,21 @@ export default function ProgressScreen() {
                           <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "600" }}>
                             {exName(ex)}
                           </Text>
-                          {pr && (
+                          {entry && (
                             <Text style={{ color: theme.colors.muted, fontSize: 11, marginTop: 2 }}>
-                              {pr.date.slice(5).replace("-", "/")} · best{isNew ? " · today" : ""}
+                              {entry.date.slice(5).replace("-", "/")} · {t.weight_current}{isToday ? ` · ${t.weight_today}` : ""}
                             </Text>
                           )}
                         </View>
                         <Text style={{
-                          color: pr ? theme.colors.amber : theme.colors.muted,
+                          color: entry ? theme.colors.amber : theme.colors.muted,
                           fontSize: 17, fontWeight: "900", marginRight: 4,
-                          shadowColor: pr ? theme.colors.amber : "transparent",
+                          shadowColor: entry ? theme.colors.amber : "transparent",
                           shadowOffset: { width: 0, height: 0 },
-                          shadowOpacity: pr ? 0.5 : 0,
+                          shadowOpacity: entry ? 0.5 : 0,
                           shadowRadius: 8,
                         }}>
-                          {pr ? `${pr.weight}kg` : "—"}
+                          {entry ? `${entry.weight}kg` : "—"}
                         </Text>
                         <Ionicons
                           name={isActive ? "chevron-up" : "add-circle-outline"}
@@ -180,38 +189,61 @@ export default function ProgressScreen() {
                       </Pressable>
 
                       {isActive && (
-                        <View style={{ paddingHorizontal: 16, paddingBottom: 14, flexDirection: "row", gap: 8 }}>
-                          <TextInput
-                            value={prInput}
-                            onChangeText={setPrInput}
-                            placeholder={pr ? `Beat ${pr.weight}kg` : t.weight_placeholder}
-                            placeholderTextColor={theme.colors.muted}
-                            keyboardType="decimal-pad"
-                            returnKeyType="done"
-                            autoFocus
-                            onSubmitEditing={logPR}
-                            style={{
-                              flex: 1,
-                              backgroundColor: theme.colors.cardElevated,
-                              borderRadius: theme.radius.sm,
-                              paddingHorizontal: 12,
-                              paddingVertical: 10,
-                              color: theme.colors.text,
-                              fontSize: 15, fontWeight: "700",
-                              borderWidth: 1, borderColor: theme.colors.amberDim,
-                            }}
-                          />
-                          <Pressable
-                            onPress={logPR}
-                            style={{
-                              backgroundColor: theme.colors.amber,
-                              borderRadius: theme.radius.sm,
-                              paddingHorizontal: 16,
-                              justifyContent: "center",
-                            }}
-                          >
-                            <Text style={{ color: "#0D0D0D", fontWeight: "800", fontSize: 13 }}>{t.save}</Text>
-                          </Pressable>
+                        <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
+                          <View style={{ flexDirection: "row", gap: 8 }}>
+                            <TextInput
+                              value={weightInput}
+                              onChangeText={(v) => { setWeightInput(v); setInputError(false); }}
+                              placeholder={entry ? `${entry.weight} kg` : t.weight_placeholder}
+                              placeholderTextColor={theme.colors.muted}
+                              keyboardType="decimal-pad"
+                              returnKeyType="done"
+                              autoFocus
+                              onSubmitEditing={saveWeight}
+                              style={{
+                                flex: 1,
+                                backgroundColor: theme.colors.cardElevated,
+                                borderRadius: theme.radius.sm,
+                                paddingHorizontal: 12,
+                                paddingVertical: 10,
+                                color: theme.colors.text,
+                                fontSize: 15, fontWeight: "700",
+                                borderWidth: 1,
+                                borderColor: inputError ? theme.colors.amber : theme.colors.amberDim,
+                              }}
+                            />
+                            <Pressable
+                              onPress={saveWeight}
+                              style={{
+                                backgroundColor: theme.colors.amber,
+                                borderRadius: theme.radius.sm,
+                                paddingHorizontal: 16,
+                                justifyContent: "center",
+                              }}
+                            >
+                              <Text style={{ color: "#0D0D0D", fontWeight: "800", fontSize: 13 }}>{t.save}</Text>
+                            </Pressable>
+                            {entry && (
+                              <Pressable
+                                onPress={clearWeight}
+                                style={{
+                                  backgroundColor: theme.colors.cardElevated,
+                                  borderRadius: theme.radius.sm,
+                                  borderWidth: 1,
+                                  borderColor: theme.colors.amberDeep,
+                                  paddingHorizontal: 12,
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <Ionicons name="trash-outline" size={16} color={theme.colors.amberDim} />
+                              </Pressable>
+                            )}
+                          </View>
+                          {inputError && (
+                            <Text style={{ color: theme.colors.amber, fontSize: 11, marginTop: 6 }}>
+                              {t.weight_max_error}
+                            </Text>
+                          )}
                         </View>
                       )}
                     </View>

@@ -5,15 +5,17 @@ import {
   Pressable,
   Modal,
   Animated,
+  AppState,
+  Vibration,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect, useRef } from "react";
-import * as SQLite from "expo-sqlite";
 import { theme } from "../constants/theme";
 import { getTodayWorkout } from "../constants/data";
-import { useSettings } from "./SettingsContext";
+import { useSettings } from "../constants/SettingsContext";
 
 // Reusable animated press button
 function ScalePress({
@@ -41,7 +43,7 @@ function ScalePress({
 
 export default function SessionScreen() {
   const router = useRouter();
-  const { t, lang } = useSettings();
+  const { t, lang, db } = useSettings();
   const workout = getTodayWorkout();
   const exName = (ex: any) => lang === "fr" && ex.name_fr ? ex.name_fr : ex.name;
   const exCue = (ex: any) => lang === "fr" && ex.cue_fr ? ex.cue_fr : ex.cue;
@@ -54,6 +56,7 @@ export default function SessionScreen() {
   const [currentSet, setCurrentSet] = useState(1);
   const [isResting, setIsResting] = useState(false);
   const [restSecondsLeft, setRestSecondsLeft] = useState(90);
+  const [timerDone, setTimerDone] = useState(false);
   const [expandedCue, setExpandedCue] = useState(false);
   const expandAnim = useRef(new Animated.Value(0)).current;
   const chevronAnim = useRef(new Animated.Value(0)).current;
@@ -62,12 +65,16 @@ export default function SessionScreen() {
   const [prMap, setPrMap] = useState<Record<string, number>>({});
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const doneTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const restEndTimeRef = useRef<number>(0);
+  const timerFiredRef = useRef(false);
   const restTypeRef = useRef<"set" | "exercise">("set");
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
   const setDoneScale = useRef(new Animated.Value(1)).current;
+  const flashAnim = useRef(new Animated.Value(1)).current;
 
   const exercises = workout?.exercises ?? [];
   const currentExercise = exercises[currentExerciseIndex];
@@ -75,21 +82,29 @@ export default function SessionScreen() {
   const isLastExercise = currentExerciseIndex === exercises.length - 1;
   const isLastSet = currentSet === totalSets;
 
-  // Load PRs from SQLite
+  // Block Android back button — show exit modal instead
   useEffect(() => {
-    async function loadPRs() {
-      try {
-        const db = await SQLite.openDatabaseAsync("forge.db");
-        const rows = await db.getAllAsync<{ exercise_id: string; weight: number }>(
-          "SELECT exercise_id, MAX(weight) as weight FROM pr_entries GROUP BY exercise_id"
-        );
-        const map: Record<string, number> = {};
-        rows.forEach((r) => { map[r.exercise_id] = r.weight; });
-        setPrMap(map);
-      } catch { /* DB not initialized yet */ }
+    const handler = () => {
+      if (!sessionDone) setShowExitModal(true);
+      return true;
+    };
+    const sub = BackHandler.addEventListener("hardwareBackPress", handler);
+    return () => sub.remove();
+  }, [sessionDone]);
+
+  // Load weights from context db (waits for tables to be created)
+  useEffect(() => {
+    if (!db) return;
+    async function loadWeights() {
+      const rows = await db!.getAllAsync<{ exercise_id: string; weight: number }>(
+        "SELECT exercise_id, weight FROM pr_entries"
+      );
+      const map: Record<string, number> = {};
+      rows.forEach((r) => { map[r.exercise_id] = r.weight; });
+      setPrMap(map);
     }
-    loadPRs();
-  }, []);
+    loadWeights();
+  }, [db]);
 
   // Slide + fade in
   const animateIn = () => {
@@ -115,6 +130,22 @@ export default function SessionScreen() {
     return () => loop.stop();
   }, []);
 
+  // Flash animation when timer is done
+  useEffect(() => {
+    if (!timerDone) {
+      flashAnim.setValue(1);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(flashAnim, { toValue: 0.15, duration: 300, useNativeDriver: true }),
+        Animated.timing(flashAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [timerDone]);
+
   const advanceAfterRest = () => {
     if (restTypeRef.current === "exercise") {
       setCurrentExerciseIndex((i) => i + 1);
@@ -127,22 +158,56 @@ export default function SessionScreen() {
     }
   };
 
+  // Background-safe timer using timestamps + AppState
   useEffect(() => {
-    if (!isResting) return;
+    if (!isResting) {
+      setTimerDone(false);
+      return;
+    }
+
+    const endTime = Date.now() + 90 * 1000;
+    restEndTimeRef.current = endTime;
+    timerFiredRef.current = false;
     setRestSecondsLeft(90);
-    timerRef.current = setInterval(() => {
-      setRestSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current!);
-          advanceAfterRest();
-          setIsResting(false);
-          animateIn();
-          return 90;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    setTimerDone(false);
+
+    const handleTimerDone = () => {
+      if (timerFiredRef.current) return;
+      timerFiredRef.current = true;
+      setRestSecondsLeft(0);
+      setTimerDone(true);
+      Vibration.vibrate([0, 500, 200, 500]);
+
+      doneTimeoutRef.current = setTimeout(() => {
+        advanceAfterRest();
+        setIsResting(false);
+        setTimerDone(false);
+        animateIn();
+      }, 3000);
+    };
+
+    const updateTimer = () => {
+      if (timerFiredRef.current) return;
+      const remaining = Math.max(0, Math.ceil((restEndTimeRef.current - Date.now()) / 1000));
+      if (remaining <= 0) {
+        if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+        handleTimerDone();
+        return;
+      }
+      setRestSecondsLeft(remaining);
+    };
+
+    timerRef.current = setInterval(updateTimer, 500);
+
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") updateTimer();
+    });
+
+    return () => {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      if (doneTimeoutRef.current) { clearTimeout(doneTimeoutRef.current); doneTimeoutRef.current = null; }
+      subscription.remove();
+    };
   }, [isResting]);
 
   const handleSetDone = () => {
@@ -155,7 +220,10 @@ export default function SessionScreen() {
   };
 
   const skipRest = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (doneTimeoutRef.current) { clearTimeout(doneTimeoutRef.current); doneTimeoutRef.current = null; }
+    timerFiredRef.current = true;
+    setTimerDone(false);
     advanceAfterRest();
     setIsResting(false);
     animateIn();
@@ -314,27 +382,27 @@ export default function SessionScreen() {
           /* ── REST SCREEN ── */
           <View style={{ alignItems: "center", paddingTop: 24 }}>
             <Text style={{ color: theme.colors.textSecondary, fontSize: 11, letterSpacing: 3, textTransform: "uppercase", marginBottom: 36 }}>
-              {t.session_rest}
+              {timerDone ? t.session_times_up : t.session_rest}
             </Text>
 
             {/* Timer ring */}
-            <View style={{ width: 200, height: 200, alignItems: "center", justifyContent: "center", marginBottom: 36 }}>
+            <Animated.View style={{ width: 200, height: 200, alignItems: "center", justifyContent: "center", marginBottom: 36, opacity: flashAnim }}>
               <View style={{ position: "absolute", width: 200, height: 200, borderRadius: 100, borderWidth: 6, borderColor: theme.colors.border }} />
               <View style={{
                 position: "absolute", width: 200, height: 200,
                 borderRadius: 100, borderWidth: 6,
-                borderColor: theme.colors.amber,
-                opacity: Math.max(0.1, restProgress),
+                borderColor: timerDone ? theme.colors.amberBright : theme.colors.amber,
+                opacity: timerDone ? 1 : Math.max(0.1, restProgress),
                 shadowColor: theme.colors.amber,
                 shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.55 * restProgress,
-                shadowRadius: 16,
+                shadowOpacity: timerDone ? 0.8 : 0.55 * restProgress,
+                shadowRadius: timerDone ? 24 : 16,
               }} />
-              <Text style={{ color: theme.colors.amber, fontSize: 76, fontWeight: "900", lineHeight: 84 }}>
+              <Text style={{ color: timerDone ? theme.colors.amberBright : theme.colors.amber, fontSize: 76, fontWeight: "900", lineHeight: 84 }}>
                 {restSecondsLeft}
               </Text>
               <Text style={{ color: theme.colors.muted, fontSize: 12, letterSpacing: 1 }}>{t.session_seconds}</Text>
-            </View>
+            </Animated.View>
 
             <Text style={{ color: theme.colors.textSecondary, fontSize: 13, marginBottom: 6 }}>{t.session_up_next}</Text>
             <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: "800", marginBottom: 6, textAlign: "center" }}>
@@ -422,7 +490,7 @@ export default function SessionScreen() {
                     {currentPR} kg
                   </Text>
                   <Text style={{ color: theme.colors.amberDim, fontSize: 11, marginTop: 1 }}>
-                    {t.session_pr_hint}
+                    {t.session_weight_hint}
                   </Text>
                 </View>
               </View>
