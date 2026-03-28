@@ -641,9 +641,8 @@ export type DayKey = keyof typeof MENU_DATA;
 export type WorkoutKey = keyof typeof WORKOUT_DATA;
 
 export function getTodayKey(): DayKey {
-  //const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
-  //return days[new Date().getDay()];
-  return "tuesday";
+  const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
+  return days[new Date().getDay()];
 }
 
 export function getTodayWorkout() {
