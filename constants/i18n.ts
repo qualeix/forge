@@ -77,6 +77,42 @@ export type Translations = {
   session_complete: string;
   session_crushed: (n: number) => string;
   session_done: string;
+  // Program tab
+  tab_program: string;
+  program_title: string;
+  program_week: string;
+  program_workouts: string;
+  program_rest: string;
+  program_assign_title: string;
+  program_set_rest: string;
+  program_current: string;
+  program_exercises: (n: number) => string;
+  program_home_routine: string;
+  program_rename: string;
+  program_name_placeholder: string;
+  program_rename_save: string;
+  // New customization strings
+  program_new_workout: string;
+  program_create: string;
+  program_no_exercises: string;
+  program_delete_title: string;
+  program_delete_confirm: string;
+  program_delete: string;
+  program_cancel: string;
+  program_add_exercise: string;
+  program_exercise_name: string;
+  program_exercise_name_fr: string;
+  program_sets: string;
+  program_reps: string;
+  program_cue: string;
+  program_technique_label: string;
+  program_add: string;
+  program_edit_exercise: string;
+  program_save: string;
+  program_name_en: string;
+  program_name_fr_label: string;
+  program_remove_exercise: string;
+  program_rest_seconds: string;
 };
 
 export const translations: Record<Lang, Translations> = {
@@ -154,6 +190,40 @@ export const translations: Record<Lang, Translations> = {
     session_complete: "Session Complete",
     session_crushed: (n) => `${n} exercises crushed`,
     session_done: "DONE",
+    tab_program: "PROGRAM",
+    program_title: "My Program",
+    program_week: "Week Schedule",
+    program_workouts: "Workouts",
+    program_rest: "Rest",
+    program_assign_title: "Select Workout",
+    program_set_rest: "Rest Day",
+    program_current: "current",
+    program_exercises: (n) => `${n} exercises`,
+    program_home_routine: "Home Routine",
+    program_rename: "Rename Workout",
+    program_name_placeholder: "Workout name",
+    program_rename_save: "Save",
+    program_new_workout: "New Workout",
+    program_create: "Create",
+    program_no_exercises: "No exercises yet",
+    program_delete_title: "Delete Workout?",
+    program_delete_confirm: "All exercises will be removed and this workout will be unassigned from your schedule.",
+    program_delete: "Delete",
+    program_cancel: "Cancel",
+    program_add_exercise: "Add Exercise",
+    program_exercise_name: "Exercise name",
+    program_exercise_name_fr: "French name (optional)",
+    program_sets: "Sets",
+    program_reps: "Reps",
+    program_cue: "Coaching cue",
+    program_technique_label: "Technique details",
+    program_add: "Add",
+    program_edit_exercise: "Edit Exercise",
+    program_save: "Save",
+    program_name_en: "Name (English)",
+    program_name_fr_label: "Name (French)",
+    program_remove_exercise: "Remove",
+    program_rest_seconds: "Rest (seconds)",
   },
   fr: {
     tab_today: "AUJOURD'HUI",
@@ -229,5 +299,39 @@ export const translations: Record<Lang, Translations> = {
     session_complete: "Séance Terminée",
     session_crushed: (n) => `${n} exercices complétés`,
     session_done: "OK",
+    tab_program: "PROGRAMME",
+    program_title: "Mon Programme",
+    program_week: "Planning Semaine",
+    program_workouts: "Séances",
+    program_rest: "Repos",
+    program_assign_title: "Choisir Séance",
+    program_set_rest: "Jour de repos",
+    program_current: "actuel",
+    program_exercises: (n) => `${n} exercices`,
+    program_home_routine: "Routine Maison",
+    program_rename: "Renommer la séance",
+    program_name_placeholder: "Nom de la séance",
+    program_rename_save: "OK",
+    program_new_workout: "Nouvelle Séance",
+    program_create: "Créer",
+    program_no_exercises: "Aucun exercice",
+    program_delete_title: "Supprimer la séance ?",
+    program_delete_confirm: "Tous les exercices seront supprimés et cette séance sera retirée du planning.",
+    program_delete: "Supprimer",
+    program_cancel: "Annuler",
+    program_add_exercise: "Ajouter un exercice",
+    program_exercise_name: "Nom de l'exercice",
+    program_exercise_name_fr: "Nom en français (optionnel)",
+    program_sets: "Séries",
+    program_reps: "Répétitions",
+    program_cue: "Conseil",
+    program_technique_label: "Détails technique",
+    program_add: "Ajouter",
+    program_edit_exercise: "Modifier l'exercice",
+    program_save: "OK",
+    program_name_en: "Nom (anglais)",
+    program_name_fr_label: "Nom (français)",
+    program_remove_exercise: "Retirer",
+    program_rest_seconds: "Repos (secondes)",
   },
 };

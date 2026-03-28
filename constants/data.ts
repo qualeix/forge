@@ -640,14 +640,23 @@ export const MENU_DATA = {
 export type DayKey = keyof typeof MENU_DATA;
 export type WorkoutKey = keyof typeof WORKOUT_DATA;
 
+// Default schedule: day index (0=Sun..6=Sat) → workout key or null (rest)
+export const DEFAULT_SCHEDULE: Record<number, string | null> = {
+  0: "sunday",   // Sunday → Leg Day
+  1: null,       // Monday → Rest
+  2: "tuesday",  // Tuesday → Push Day
+  3: null,       // Wednesday → Rest
+  4: null,       // Thursday → Rest
+  5: "friday",   // Friday → Pull Day
+  6: null,       // Saturday → Rest
+};
+
+// Display order for the week: Monday first (European convention)
+export const WEEK_DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
 export function getTodayKey(): DayKey {
   const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
   return days[new Date().getDay()];
-}
-
-export function getTodayWorkout() {
-  const key = getTodayKey();
-  return WORKOUT_DATA[key as WorkoutKey] ?? null;
 }
 
 export function getTodayMenu() {

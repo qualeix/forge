@@ -4,17 +4,18 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { theme } from "../../constants/theme";
-import { getTodayMenu, getTodayWorkout } from "../../constants/data";
+import { getTodayMenu } from "../../constants/data";
 import { useSettings } from "../../constants/SettingsContext";
+import { useProgram } from "../../constants/ProgramContext";
 
 export default function TodayScreen() {
   const router = useRouter();
   const { t, lang } = useSettings();
+  const { getTodayWorkout, schedule, getWorkoutDisplayName } = useProgram();
   const todayMenu = getTodayMenu();
   const todayWorkout = getTodayWorkout();
-  const workoutName = todayWorkout
-    ? (lang === "fr" && (todayWorkout as any).name_fr ? (todayWorkout as any).name_fr : todayWorkout.name)
-    : "";
+  const todayWorkoutKey = schedule[new Date().getDay()];
+  const workoutName = todayWorkoutKey ? getWorkoutDisplayName(todayWorkoutKey) : "";
   const exName = (ex: any) => lang === "fr" && ex.name_fr ? ex.name_fr : ex.name;
   const mealName = (meal: any) => lang === "fr" && meal.name_fr ? meal.name_fr : meal.name;
   const mealDetails = (meal: any) => lang === "fr" && meal.details_fr ? meal.details_fr : meal.details;

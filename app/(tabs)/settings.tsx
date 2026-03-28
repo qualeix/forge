@@ -158,8 +158,8 @@ export default function SettingsScreen() {
               overflow: "hidden",
             }}
           >
-            <SettingRow icon="flame-outline" label="FORGE" sub={lang === "fr" ? "Version 3.0" : "Version 3.0"}>
-              <Text style={{ color: theme.colors.muted, fontSize: 12 }}>v3</Text>
+            <SettingRow icon="flame-outline" label="FORGE" sub={lang === "fr" ? "Version 4.0" : "Version 4.0"}>
+              <Text style={{ color: theme.colors.muted, fontSize: 12 }}>v4</Text>
             </SettingRow>
           </View>
         </Animated.View>

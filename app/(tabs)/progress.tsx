@@ -10,14 +10,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { theme } from "../../constants/theme";
-import { WORKOUT_DATA } from "../../constants/data";
 import { useSettings } from "../../constants/SettingsContext";
+import { useProgram } from "../../constants/ProgramContext";
 
 type WeightRow = { exercise_id: string; weight: number; date: string };
 
 export default function ProgressScreen() {
   const { t, lang, db } = useSettings();
-  const exName = (ex: any) => lang === "fr" && ex.name_fr ? ex.name_fr : ex.name;
+  const { workouts, exercises, getWorkoutDisplayName } = useProgram();
+  const getExName = (ex: any) => lang === "fr" && ex.name_fr ? ex.name_fr : ex.name;
   const [weightMap, setWeightMap] = useState<Record<string, WeightRow>>({});
   const [activeExercise, setActiveExercise] = useState<{ id: string; name: string } | null>(null);
   const [weightInput, setWeightInput] = useState("");
@@ -34,8 +35,8 @@ export default function ProgressScreen() {
   }, []);
 
   const animStyle = (i: number) => ({
-    opacity: anims[i],
-    transform: [{ translateY: anims[i].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
+    opacity: anims[Math.min(i, anims.length - 1)],
+    transform: [{ translateY: anims[Math.min(i, anims.length - 1)].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
   });
 
   const today = new Date().toISOString().slice(0, 10);
@@ -80,11 +81,19 @@ export default function ProgressScreen() {
     await loadData(db);
   };
 
-  const exerciseGroups = [
-    { label: t.push_day, exercises: WORKOUT_DATA.tuesday.exercises },
-    { label: t.pull_day, exercises: WORKOUT_DATA.friday.exercises },
-    { label: t.leg_day, exercises: WORKOUT_DATA.sunday.exercises },
-  ];
+  // Dynamic exercise groups from ProgramContext (exclude "home")
+  const exerciseGroups = workouts
+    .filter((w) => w.key !== "home")
+    .map((w) => ({
+      label: getWorkoutDisplayName(w.key),
+      exercises: (exercises[w.key] ?? []).map((e) => ({
+        id: e.id,
+        name: e.name,
+        name_fr: e.name_fr,
+        sets: e.sets,
+        reps: e.reps,
+      })),
+    }));
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={["top"]}>
@@ -117,7 +126,7 @@ export default function ProgressScreen() {
         </Animated.View>
 
         {exerciseGroups.map((group, gi) => (
-          <Animated.View key={group.label} style={[{ marginBottom: theme.spacing.md }, animStyle(gi + 1)]}>
+          <Animated.View key={group.label + gi} style={[{ marginBottom: theme.spacing.md }, animStyle(gi + 1)]}>
             <Text style={{
               color: theme.colors.amber,
               fontSize: 11, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase",
@@ -138,6 +147,11 @@ export default function ProgressScreen() {
                 borderColor: theme.colors.glowBorder,
                 overflow: "hidden",
               }}>
+                {group.exercises.length === 0 && (
+                  <View style={{ padding: 16, alignItems: "center" }}>
+                    <Text style={{ color: theme.colors.muted, fontSize: 13 }}>{t.program_no_exercises}</Text>
+                  </View>
+                )}
                 {group.exercises.map((ex, i) => {
                   const entry = weightMap[ex.id];
                   const isActive = activeExercise?.id === ex.id;
@@ -154,7 +168,7 @@ export default function ProgressScreen() {
                             setWeightInput("");
                             setInputError(false);
                           } else {
-                            setActiveExercise({ id: ex.id, name: exName(ex) });
+                            setActiveExercise({ id: ex.id, name: getExName(ex) });
                             setWeightInput("");
                             setInputError(false);
                           }
@@ -163,7 +177,7 @@ export default function ProgressScreen() {
                       >
                         <View style={{ flex: 1 }}>
                           <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "600" }}>
-                            {exName(ex)}
+                            {getExName(ex)}
                           </Text>
                           {entry && (
                             <Text style={{ color: theme.colors.muted, fontSize: 11, marginTop: 2 }}>

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import * as SQLite from "expo-sqlite";
 import { translations, type Lang, type Translations } from "./i18n";
+import { WORKOUT_DATA, DEFAULT_SCHEDULE, type WorkoutKey } from "./data";
 
 type SettingsCtx = {
   lang: Lang;
@@ -23,12 +24,90 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function init() {
       const database = await SQLite.openDatabaseAsync("forge.db");
+      await database.runAsync("PRAGMA foreign_keys = ON");
       await database.runAsync(
         "CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
       );
       await database.runAsync(
         "CREATE TABLE IF NOT EXISTS pr_entries (id INTEGER PRIMARY KEY AUTOINCREMENT, exercise_id TEXT NOT NULL, weight REAL NOT NULL, date TEXT NOT NULL)"
       );
+      await database.runAsync(
+        "CREATE TABLE IF NOT EXISTS schedule (day_index INTEGER PRIMARY KEY, workout_key TEXT)"
+      );
+      await database.runAsync(
+        "CREATE TABLE IF NOT EXISTS workouts (key TEXT PRIMARY KEY, name TEXT NOT NULL, name_fr TEXT NOT NULL, rest_seconds INTEGER NOT NULL DEFAULT 90, sort_order INTEGER NOT NULL DEFAULT 0)"
+      );
+      await database.runAsync(
+        "CREATE TABLE IF NOT EXISTS exercises (id TEXT NOT NULL, workout_key TEXT NOT NULL, name TEXT NOT NULL, name_fr TEXT NOT NULL, sets INTEGER NOT NULL, reps TEXT NOT NULL, cue TEXT NOT NULL DEFAULT '', cue_fr TEXT NOT NULL DEFAULT '', technique TEXT NOT NULL DEFAULT '', technique_fr TEXT NOT NULL DEFAULT '', sort_order INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (id, workout_key), FOREIGN KEY (workout_key) REFERENCES workouts(key) ON DELETE CASCADE)"
+      );
+
+      // Seed workouts + exercises on first launch
+      const seeded = await database.getFirstAsync<{ value: string }>(
+        "SELECT value FROM settings WHERE key = 'data_seeded'"
+      );
+      if (!seeded) {
+        const keys = Object.keys(WORKOUT_DATA) as WorkoutKey[];
+        for (let si = 0; si < keys.length; si++) {
+          const wk = keys[si];
+          const w = WORKOUT_DATA[wk];
+          await database.runAsync(
+            "INSERT OR IGNORE INTO workouts (key, name, name_fr, rest_seconds, sort_order) VALUES (?, ?, ?, ?, ?)",
+            [wk, w.name, (w as any).name_fr ?? w.name, (w as any).restSeconds ?? 90, si]
+          );
+          for (let ei = 0; ei < w.exercises.length; ei++) {
+            const ex = w.exercises[ei];
+            await database.runAsync(
+              "INSERT OR IGNORE INTO exercises (id, workout_key, name, name_fr, sets, reps, cue, cue_fr, technique, technique_fr, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+              [ex.id, wk, ex.name, (ex as any).name_fr ?? ex.name, ex.sets, String(ex.reps), (ex as any).cue ?? "", (ex as any).cue_fr ?? "", (ex as any).technique ?? "", (ex as any).technique_fr ?? "", ei]
+            );
+          }
+        }
+        // Seed default schedule
+        for (const [dayStr, wKey] of Object.entries(DEFAULT_SCHEDULE)) {
+          await database.runAsync(
+            "INSERT OR IGNORE INTO schedule (day_index, workout_key) VALUES (?, ?)",
+            [Number(dayStr), wKey]
+          );
+        }
+
+        // Migrate old overlay tables if they exist
+        try {
+          const oldNames = await database.getAllAsync<{ workout_key: string; custom_name: string }>(
+            "SELECT workout_key, custom_name FROM workout_names"
+          );
+          for (const r of oldNames) {
+            await database.runAsync(
+              "UPDATE workouts SET name = ?, name_fr = ? WHERE key = ?",
+              [r.custom_name, r.custom_name, r.workout_key]
+            );
+          }
+        } catch {}
+        try {
+          const oldOrders = await database.getAllAsync<{ workout_key: string; exercise_ids: string }>(
+            "SELECT workout_key, exercise_ids FROM exercise_order"
+          );
+          for (const r of oldOrders) {
+            try {
+              const ids: string[] = JSON.parse(r.exercise_ids);
+              for (let i = 0; i < ids.length; i++) {
+                await database.runAsync(
+                  "UPDATE exercises SET sort_order = ? WHERE id = ? AND workout_key = ?",
+                  [i, ids[i], r.workout_key]
+                );
+              }
+            } catch {}
+          }
+        } catch {}
+
+        // Drop old overlay tables
+        try { await database.runAsync("DROP TABLE IF EXISTS workout_names"); } catch {}
+        try { await database.runAsync("DROP TABLE IF EXISTS exercise_order"); } catch {}
+
+        await database.runAsync(
+          "INSERT OR REPLACE INTO settings (key, value) VALUES ('data_seeded', '1')"
+        );
+      }
+
       const langRow = await database.getFirstAsync<{ value: string }>(
         "SELECT value FROM settings WHERE key = 'language'"
       );
