@@ -14,8 +14,8 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect, useRef } from "react";
 import { theme } from "../constants/theme";
-import { getTodayWorkout } from "../constants/data";
 import { useSettings } from "../constants/SettingsContext";
+import { useProgram } from "../constants/ProgramContext";
 
 // Reusable animated press button
 function ScalePress({
@@ -44,16 +44,26 @@ function ScalePress({
 export default function SessionScreen() {
   const router = useRouter();
   const { t, lang, db } = useSettings();
+  const { getTodayWorkout, getWorkoutDisplayName, schedule } = useProgram();
   const workout = getTodayWorkout();
+  const goHome = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/");
+  };
   const exName = (ex: any) => lang === "fr" && ex.name_fr ? ex.name_fr : ex.name;
   const exCue = (ex: any) => lang === "fr" && ex.cue_fr ? ex.cue_fr : ex.cue;
   const exTechnique = (ex: any) => lang === "fr" && ex.technique_fr ? ex.technique_fr : ex.technique;
-  const workoutName = workout
-    ? (lang === "fr" && (workout as any).name_fr ? (workout as any).name_fr : workout.name)
-    : "";
+  const todayKey = schedule[new Date().getDay()];
+  const workoutName = todayKey ? getWorkoutDisplayName(todayKey) : "";
 
-  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-  const [currentSet, setCurrentSet] = useState(1);
+  const [sessionExercises, setSessionExercises] = useState<any[]>(workout?.exercises ?? []);
+  // Track which exercise IDs are completed (all sets done)
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  // Track per-exercise set progress: exerciseId → sets completed
+  const [setProgress, setSetProgress] = useState<Record<string, number>>({});
+  // The ID of the current exercise being worked on
+  const [currentExerciseId, setCurrentExerciseId] = useState<string>(workout?.exercises?.[0]?.id ?? "");
+
   const [isResting, setIsResting] = useState(false);
   const [restSecondsLeft, setRestSecondsLeft] = useState(90);
   const [timerDone, setTimerDone] = useState(false);
@@ -76,11 +86,33 @@ export default function SessionScreen() {
   const setDoneScale = useRef(new Animated.Value(1)).current;
   const flashAnim = useRef(new Animated.Value(1)).current;
 
-  const exercises = workout?.exercises ?? [];
+  const exercises = sessionExercises;
+  const currentExerciseIndex = exercises.findIndex((e: any) => e.id === currentExerciseId);
   const currentExercise = exercises[currentExerciseIndex];
   const totalSets = typeof currentExercise?.sets === "number" ? currentExercise.sets : 3;
-  const isLastExercise = currentExerciseIndex === exercises.length - 1;
+  const currentSet = (setProgress[currentExerciseId] ?? 0) + 1;
+  const completedCount = completedIds.size;
+
+  // Derived: remaining non-completed exercises (excluding current)
+  const remainingExercises = exercises.filter(
+    (e: any) => e.id !== currentExerciseId && !completedIds.has(e.id)
+  );
+
   const isLastSet = currentSet === totalSets;
+  const isLastExercise = completedCount === exercises.length - 1 && !completedIds.has(currentExerciseId);
+
+  // Reorder any non-completed exercise
+  const moveSessionExercise = (absIndex: number, direction: "up" | "down") => {
+    const toIndex = direction === "up" ? absIndex - 1 : absIndex + 1;
+    if (toIndex < 0 || toIndex >= exercises.length) return;
+    // Cannot swap into/out of completed positions
+    if (completedIds.has(exercises[absIndex]?.id) || completedIds.has(exercises[toIndex]?.id)) return;
+    setSessionExercises((prev: any[]) => {
+      const next = [...prev];
+      [next[absIndex], next[toIndex]] = [next[toIndex], next[absIndex]];
+      return next;
+    });
+  };
 
   // Block Android back button — show exit modal instead
   useEffect(() => {
@@ -92,7 +124,7 @@ export default function SessionScreen() {
     return () => sub.remove();
   }, [sessionDone]);
 
-  // Load weights from context db (waits for tables to be created)
+  // Load weights from context db
   useEffect(() => {
     if (!db) return;
     async function loadWeights() {
@@ -146,16 +178,32 @@ export default function SessionScreen() {
     return () => loop.stop();
   }, [timerDone]);
 
+  // Find next non-completed exercise after the given one
+  const findNextExerciseId = (afterId: string): string | null => {
+    const idx = exercises.findIndex((e: any) => e.id === afterId);
+    // Look forward first
+    for (let i = idx + 1; i < exercises.length; i++) {
+      if (!completedIds.has(exercises[i].id)) return exercises[i].id;
+    }
+    // Then look from beginning
+    for (let i = 0; i < idx; i++) {
+      if (!completedIds.has(exercises[i].id)) return exercises[i].id;
+    }
+    return null;
+  };
+
   const advanceAfterRest = () => {
     if (restTypeRef.current === "exercise") {
-      setCurrentExerciseIndex((i) => i + 1);
-      setCurrentSet(1);
-      setExpandedCue(false);
-      expandAnim.setValue(0);
-      chevronAnim.setValue(0);
-    } else {
-      setCurrentSet((s) => s + 1);
+      // Move to next non-completed exercise
+      const nextId = findNextExerciseId(currentExerciseId);
+      if (nextId) {
+        setCurrentExerciseId(nextId);
+        setExpandedCue(false);
+        expandAnim.setValue(0);
+        chevronAnim.setValue(0);
+      }
     }
+    // For "set" rest, nothing to change — same exercise, currentSet auto-increments via setProgress
   };
 
   // Background-safe timer using timestamps + AppState
@@ -165,10 +213,11 @@ export default function SessionScreen() {
       return;
     }
 
-    const endTime = Date.now() + 90 * 1000;
+    const restDuration = workout?.restSeconds ?? 90;
+    const endTime = Date.now() + restDuration * 1000;
     restEndTimeRef.current = endTime;
     timerFiredRef.current = false;
-    setRestSecondsLeft(90);
+    setRestSecondsLeft(restDuration);
     setTimerDone(false);
 
     const handleTimerDone = () => {
@@ -212,10 +261,21 @@ export default function SessionScreen() {
 
   const handleSetDone = () => {
     if (isLastSet && isLastExercise) {
+      // Mark current as completed too
+      setCompletedIds((prev) => new Set([...prev, currentExerciseId]));
       setSessionDone(true);
       return;
     }
-    restTypeRef.current = isLastSet ? "exercise" : "set";
+
+    if (isLastSet) {
+      // Exercise completed — mark it done, rest, then advance
+      setCompletedIds((prev) => new Set([...prev, currentExerciseId]));
+      restTypeRef.current = "exercise";
+    } else {
+      // Set completed — increment progress, rest
+      setSetProgress((prev) => ({ ...prev, [currentExerciseId]: (prev[currentExerciseId] ?? 0) + 1 }));
+      restTypeRef.current = "set";
+    }
     setIsResting(true);
   };
 
@@ -241,6 +301,8 @@ export default function SessionScreen() {
   const pressSetDoneOut = () =>
     Animated.spring(setDoneScale, { toValue: 1, useNativeDriver: true, tension: 220, friction: 7 }).start();
 
+  const restDuration = workout?.restSeconds ?? 90;
+
   // ── EXIT MODAL ──
   const ExitModal = (
     <Modal visible={showExitModal} transparent animationType="fade" statusBarTranslucent>
@@ -263,8 +325,8 @@ export default function SessionScreen() {
             {t.session_end_title}
           </Text>
           <Text style={{ color: theme.colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 28 }}>
-            {currentExerciseIndex > 0
-              ? t.session_exercises_done(currentExerciseIndex, exercises.length)
+            {completedCount > 0
+              ? t.session_exercises_done(completedCount, exercises.length)
               : t.session_just_started}{"\n"}{t.session_no_save}
           </Text>
           <View style={{ gap: 10 }}>
@@ -277,7 +339,7 @@ export default function SessionScreen() {
               </View>
             </ScalePress>
             <ScalePress
-              onPress={() => { setShowExitModal(false); router.back(); }}
+              onPress={() => { setShowExitModal(false); goHome(); }}
               style={{ borderRadius: theme.radius.md }}
             >
               <View style={{
@@ -303,7 +365,7 @@ export default function SessionScreen() {
         <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700", marginBottom: 8 }}>{t.session_rest_day_title}</Text>
         <Text style={{ color: theme.colors.muted, fontSize: 14, marginBottom: 32 }}>{t.session_no_session}</Text>
         <Pressable
-          onPress={() => router.back()}
+          onPress={goHome}
           style={{ backgroundColor: theme.colors.card, borderRadius: theme.radius.md, paddingHorizontal: 24, paddingVertical: 12 }}
         >
           <Text style={{ color: theme.colors.amber, fontWeight: "700" }}>{t.session_go_back}</Text>
@@ -326,7 +388,7 @@ export default function SessionScreen() {
           {t.session_crushed(exercises.length)}
         </Text>
         <View style={{ ...theme.glow, borderRadius: theme.radius.md }}>
-          <ScalePress onPress={() => router.back()}>
+          <ScalePress onPress={goHome}>
             <View style={{ backgroundColor: theme.colors.amber, borderRadius: theme.radius.md, paddingVertical: 16, paddingHorizontal: 56 }}>
               <Text style={{ color: "#0D0D0D", fontSize: 16, fontWeight: "900", letterSpacing: 1 }}>{t.session_done}</Text>
             </View>
@@ -336,7 +398,7 @@ export default function SessionScreen() {
     );
   }
 
-  const restProgress = restSecondsLeft / 90;
+  const restProgress = restSecondsLeft / restDuration;
   const restIsForExercise = restTypeRef.current === "exercise";
   const currentPR = prMap[currentExercise?.id ?? ""];
 
@@ -359,7 +421,7 @@ export default function SessionScreen() {
           {workoutName.toUpperCase()}
         </Text>
         <Text style={{ color: theme.colors.textSecondary, fontSize: 13, fontWeight: "600" }}>
-          {currentExerciseIndex + 1} / {exercises.length}
+          {completedCount} / {exercises.length}
         </Text>
       </View>
 
@@ -369,7 +431,7 @@ export default function SessionScreen() {
           height: 2,
           backgroundColor: theme.colors.amber,
           borderRadius: 1,
-          width: `${(currentExerciseIndex / exercises.length) * 100}%`,
+          width: `${(completedCount / exercises.length) * 100}%`,
         }} />
       </View>
 
@@ -407,12 +469,16 @@ export default function SessionScreen() {
             <Text style={{ color: theme.colors.textSecondary, fontSize: 13, marginBottom: 6 }}>{t.session_up_next}</Text>
             <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: "800", marginBottom: 6, textAlign: "center" }}>
               {restIsForExercise
-                ? (exercises[currentExerciseIndex + 1] ? exName(exercises[currentExerciseIndex + 1]) : "You're done!")
+                ? (() => {
+                    const nextId = findNextExerciseId(currentExerciseId);
+                    const nextEx = nextId ? exercises.find((e: any) => e.id === nextId) : null;
+                    return nextEx ? exName(nextEx) : t.session_done;
+                  })()
                 : exName(currentExercise)}
             </Text>
             {!restIsForExercise && (
               <Text style={{ color: theme.colors.textSecondary, fontSize: 15, marginBottom: 36 }}>
-                {t.session_set_of(currentSet + 1, totalSets)}
+                {t.session_set_of(currentSet, totalSets)}
               </Text>
             )}
 
@@ -560,8 +626,8 @@ export default function SessionScreen() {
               </Pressable>
             </Animated.View>
 
-            {/* Coming Up */}
-            {currentExerciseIndex < exercises.length - 1 && (
+            {/* Coming Up — all non-completed exercises with reorder */}
+            {remainingExercises.length > 0 && (
               <View>
                 <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
                   {t.session_coming_up}
@@ -573,22 +639,57 @@ export default function SessionScreen() {
                   borderColor: theme.colors.border,
                   overflow: "hidden",
                 }}>
-                  {exercises.slice(currentExerciseIndex + 1, currentExerciseIndex + 4).map((ex, i) => (
-                    <View key={ex.id}>
-                      {i > 0 && <View style={{ height: 1, backgroundColor: theme.colors.border, marginHorizontal: 16 }} />}
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, opacity: 1 - i * 0.2 }}>
-                        <Text style={{ color: theme.colors.amberDim, fontSize: 11, fontWeight: "700", width: 24 }}>
-                          {String(currentExerciseIndex + i + 2).padStart(2, "0")}
-                        </Text>
-                        <Text style={{ color: theme.colors.textSecondary, fontSize: 14, fontWeight: "600", flex: 1 }}>
-                          {exName(ex)}
-                        </Text>
-                        <Text style={{ color: theme.colors.muted, fontSize: 12 }}>
-                          {ex.sets}×{ex.reps}
-                        </Text>
+                  {remainingExercises.map((ex: any, i: number) => {
+                    const absIndex = exercises.findIndex((e: any) => e.id === ex.id);
+                    // Can move up if the position above is not completed
+                    const canMoveUp = absIndex > 0 && !completedIds.has(exercises[absIndex - 1]?.id);
+                    const canMoveDown = absIndex < exercises.length - 1 && !completedIds.has(exercises[absIndex + 1]?.id);
+                    return (
+                      <View key={ex.id}>
+                        {i > 0 && <View style={{ height: 1, backgroundColor: theme.colors.border, marginHorizontal: 16 }} />}
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12, paddingLeft: 14, paddingRight: 8 }}>
+                          <Text style={{ color: theme.colors.amberDim, fontSize: 11, fontWeight: "700", width: 24 }}>
+                            {String(absIndex + 1).padStart(2, "0")}
+                          </Text>
+                          {/* Tap to swap with current */}
+                          <Pressable
+                            onPress={() => {
+                              // Swap this exercise into the current position
+                              setSessionExercises((prev: any[]) => {
+                                const next = [...prev];
+                                const curIdx = next.findIndex((e: any) => e.id === currentExerciseId);
+                                const tgtIdx = next.findIndex((e: any) => e.id === ex.id);
+                                if (curIdx >= 0 && tgtIdx >= 0) {
+                                  [next[curIdx], next[tgtIdx]] = [next[tgtIdx], next[curIdx]];
+                                }
+                                return next;
+                              });
+                              // Switch to the tapped exercise
+                              setCurrentExerciseId(ex.id);
+                              setExpandedCue(false);
+                              expandAnim.setValue(0);
+                              chevronAnim.setValue(0);
+                              animateIn();
+                            }}
+                            style={{ flex: 1 }}
+                          >
+                            <Text style={{ color: theme.colors.textSecondary, fontSize: 14, fontWeight: "600" }}>
+                              {exName(ex)}
+                            </Text>
+                          </Pressable>
+                          <Text style={{ color: theme.colors.muted, fontSize: 11, marginRight: 4 }}>
+                            {ex.sets}×{ex.reps}
+                          </Text>
+                          <Pressable onPress={() => moveSessionExercise(absIndex, "up")} hitSlop={6} style={{ opacity: canMoveUp ? 1 : 0.2, padding: 4 }} disabled={!canMoveUp}>
+                            <Ionicons name="chevron-up" size={16} color={theme.colors.amber} />
+                          </Pressable>
+                          <Pressable onPress={() => moveSessionExercise(absIndex, "down")} hitSlop={6} style={{ opacity: canMoveDown ? 1 : 0.2, padding: 4 }} disabled={!canMoveDown}>
+                            <Ionicons name="chevron-down" size={16} color={theme.colors.amber} />
+                          </Pressable>
+                        </View>
                       </View>
-                    </View>
-                  ))}
+                    );
+                  })}
                 </View>
               </View>
             )}
