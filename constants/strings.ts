@@ -92,6 +92,13 @@ export type AppStrings = {
   program_save: string;
   program_remove_exercise: string;
   program_rest_seconds: string;
+  // Édition menus
+  meals_edit_meal: string;
+  meals_add_meal_title: string;
+  meals_add_meal_btn: string;
+  meals_meal_name: string;
+  meals_meal_time: string;
+  meals_meal_details: string;
 };
 
 export const strings: AppStrings = {
@@ -187,4 +194,10 @@ export const strings: AppStrings = {
   program_save: "OK",
   program_remove_exercise: "Retirer",
   program_rest_seconds: "Repos (secondes)",
+  meals_edit_meal: "Modifier le repas",
+  meals_add_meal_title: "Nouveau repas",
+  meals_add_meal_btn: "Ajouter un repas",
+  meals_meal_name: "Nom du repas",
+  meals_meal_time: "Heure (ex: 12:00)",
+  meals_meal_details: "Composition / détails",
 };

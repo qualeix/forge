@@ -55,8 +55,8 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t.tab_today,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="flame" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "flame" : "flame-outline"} size={size} color={color} />
           ),
         }}
       />
@@ -64,8 +64,8 @@ export default function TabLayout() {
         name="meals"
         options={{
           title: t.tab_meals,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="nutrition" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "nutrition" : "nutrition-outline"} size={size} color={color} />
           ),
         }}
       />
@@ -73,8 +73,8 @@ export default function TabLayout() {
         name="program"
         options={{
           title: t.tab_program,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "barbell" : "barbell-outline"} size={size} color={color} />
           ),
         }}
       />
@@ -82,8 +82,8 @@ export default function TabLayout() {
         name="progress"
         options={{
           title: t.tab_progress,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trending-up" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "stats-chart" : "stats-chart-outline"} size={size} color={color} />
           ),
         }}
       />

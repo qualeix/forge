@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
 import * as SQLite from "expo-sqlite";
 import { strings, type AppStrings } from "./strings";
-import { WORKOUT_DATA, DEFAULT_SCHEDULE, type WorkoutKey } from "./data";
+import { WORKOUT_DATA, MENU_DATA, DEFAULT_SCHEDULE, type WorkoutKey, type DayKey } from "./data";
 
 type SettingsCtx = {
   t: AppStrings;
@@ -15,8 +15,12 @@ const SettingsContext = createContext<SettingsCtx>({
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
+  const initialized = useRef(false);
 
   useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+
     async function init() {
       const database = await SQLite.openDatabaseAsync("forge.db");
       await database.runAsync("PRAGMA foreign_keys = ON");
@@ -34,6 +38,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       );
       await database.runAsync(
         "CREATE TABLE IF NOT EXISTS exercises (id TEXT NOT NULL, workout_key TEXT NOT NULL, name TEXT NOT NULL, name_fr TEXT NOT NULL, sets INTEGER NOT NULL, reps TEXT NOT NULL, cue TEXT NOT NULL DEFAULT '', cue_fr TEXT NOT NULL DEFAULT '', technique TEXT NOT NULL DEFAULT '', technique_fr TEXT NOT NULL DEFAULT '', sort_order INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (id, workout_key), FOREIGN KEY (workout_key) REFERENCES workouts(key) ON DELETE CASCADE)"
+      );
+      await database.runAsync(
+        "CREATE TABLE IF NOT EXISTS menu_meals (id INTEGER PRIMARY KEY AUTOINCREMENT, day_key TEXT NOT NULL, name TEXT NOT NULL, details TEXT NOT NULL DEFAULT '', time TEXT NOT NULL, sort_order INTEGER NOT NULL DEFAULT 0)"
       );
 
       // Seed workouts + exercises au premier lancement
@@ -99,6 +106,27 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
         await database.runAsync(
           "INSERT OR REPLACE INTO settings (key, value) VALUES ('data_seeded', '1')"
+        );
+      }
+
+      // Seed menu_meals séparément (utilisateurs existants inclus)
+      const menuSeeded = await database.getFirstAsync<{ value: string }>(
+        "SELECT value FROM settings WHERE key = 'menu_seeded'"
+      );
+      if (!menuSeeded) {
+        const dayKeys = Object.keys(MENU_DATA) as DayKey[];
+        for (const dayKey of dayKeys) {
+          const day = MENU_DATA[dayKey];
+          for (let mi = 0; mi < day.meals.length; mi++) {
+            const meal = day.meals[mi];
+            await database.runAsync(
+              "INSERT INTO menu_meals (day_key, name, details, time, sort_order) VALUES (?, ?, ?, ?, ?)",
+              [dayKey, (meal as any).name_fr ?? meal.name, (meal as any).details_fr ?? meal.details, meal.time, mi]
+            );
+          }
+        }
+        await database.runAsync(
+          "INSERT OR REPLACE INTO settings (key, value) VALUES ('menu_seeded', '1')"
         );
       }
 

@@ -4,15 +4,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { theme } from "../../constants/theme";
-import { getTodayMenu } from "../../constants/data";
 import { useSettings } from "../../constants/SettingsContext";
 import { useProgram } from "../../constants/ProgramContext";
+import { useMenu } from "../../constants/MenuContext";
+import { getTodayKey } from "../../constants/data";
 
 export default function TodayScreen() {
   const router = useRouter();
   const { t, db } = useSettings();
   const { getTodayWorkout, schedule, getWorkoutDisplayName } = useProgram();
-  const todayMenu = getTodayMenu();
+  const { menuData } = useMenu();
   const todayWorkout = getTodayWorkout();
   const todayWorkoutKey = schedule[new Date().getDay()];
   const workoutName = todayWorkoutKey ? getWorkoutDisplayName(todayWorkoutKey) : "";
@@ -39,7 +40,8 @@ export default function TodayScreen() {
     return h * 60 + m;
   };
 
-  const nextMeal = todayMenu.meals.find((meal) => parseTime(meal.time) > currentTime);
+  const todayMeals = menuData[getTodayKey()] ?? [];
+  const nextMeal = todayMeals.find((meal) => parseTime(meal.time) > currentTime);
   const dayName = t.days[now.getDay()];
   const dateStr = now.toLocaleDateString(t.date_locale, { day: "numeric", month: "long", year: "numeric" });
 
@@ -222,25 +224,30 @@ export default function TodayScreen() {
               borderRadius: theme.radius.xl,
               borderWidth: 1,
               borderColor: theme.colors.border,
-              padding: theme.spacing.lg,
+              padding: theme.spacing.md,
             }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <View style={{ flex: 1, marginRight: 12 }}>
-                  <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700", marginBottom: 4 }}>
-                    {(nextMeal as any).name_fr || nextMeal.name}
+                  <Text style={{ color: theme.colors.text, fontSize: 17, fontWeight: "700", marginBottom: nextMeal.details.length > 0 ? 4 : 0 }}>
+                    {nextMeal.name}
                   </Text>
-                  <Text style={{ color: theme.colors.textSecondary, fontSize: 13, lineHeight: 18 }}>
-                    {(nextMeal as any).details_fr || nextMeal.details}
-                  </Text>
+                  {nextMeal.details.length > 0 && (
+                    <Text style={{ color: theme.colors.textSecondary, fontSize: 13, lineHeight: 18 }}>
+                      {nextMeal.details}
+                    </Text>
+                  )}
                 </View>
                 <View style={{
                   backgroundColor: theme.colors.amberSubtle,
                   borderRadius: theme.radius.md,
-                  padding: theme.spacing.sm,
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
                   alignItems: "center",
+                  flexDirection: "row",
+                  gap: 6,
                 }}>
-                  <Ionicons name="time-outline" size={14} color={theme.colors.amber} />
-                  <Text style={{ color: theme.colors.amber, fontSize: 14, fontWeight: "800", marginTop: 2 }}>
+                  <Ionicons name="time-outline" size={13} color={theme.colors.amber} />
+                  <Text style={{ color: theme.colors.amber, fontSize: 14, fontWeight: "800" }}>
                     {nextMeal.time}
                   </Text>
                 </View>

@@ -29,7 +29,7 @@ export default function ProgressScreen() {
   useEffect(() => {
     Animated.stagger(80,
       anims.map((a) =>
-        Animated.timing(a, { toValue: 1, duration: 380, useNativeDriver: false })
+        Animated.timing(a, { toValue: 1, duration: 380, useNativeDriver: true })
       )
     ).start();
   }, []);
@@ -239,7 +239,7 @@ export default function ProgressScreen() {
                                   justifyContent: "center",
                                 }}
                               >
-                                <Ionicons name="trash-outline" size={16} color={theme.colors.amberDim} />
+                                <Ionicons name="close-circle-outline" size={16} color={theme.colors.muted} />
                               </Pressable>
                             )}
                           </View>
