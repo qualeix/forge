@@ -8,7 +8,7 @@
     "userInterfaceStyle": "dark",
     "scheme": "forge",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0D0D0D"
     },
@@ -24,7 +24,7 @@
       "package": "com.forge.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/icon.png"
     },
     "plugins": [
       "expo-sqlite",
