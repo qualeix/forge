@@ -1,24 +1,19 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import * as SQLite from "expo-sqlite";
-import { translations, type Lang, type Translations } from "./i18n";
+import { strings, type AppStrings } from "./strings";
 import { WORKOUT_DATA, DEFAULT_SCHEDULE, type WorkoutKey } from "./data";
 
 type SettingsCtx = {
-  lang: Lang;
-  setLang: (l: Lang) => void;
-  t: Translations;
+  t: AppStrings;
   db: SQLite.SQLiteDatabase | null;
 };
 
 const SettingsContext = createContext<SettingsCtx>({
-  lang: "en",
-  setLang: () => {},
-  t: translations.en,
+  t: strings,
   db: null,
 });
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("en");
   const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
 
   useEffect(() => {
@@ -41,7 +36,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         "CREATE TABLE IF NOT EXISTS exercises (id TEXT NOT NULL, workout_key TEXT NOT NULL, name TEXT NOT NULL, name_fr TEXT NOT NULL, sets INTEGER NOT NULL, reps TEXT NOT NULL, cue TEXT NOT NULL DEFAULT '', cue_fr TEXT NOT NULL DEFAULT '', technique TEXT NOT NULL DEFAULT '', technique_fr TEXT NOT NULL DEFAULT '', sort_order INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (id, workout_key), FOREIGN KEY (workout_key) REFERENCES workouts(key) ON DELETE CASCADE)"
       );
 
-      // Seed workouts + exercises on first launch
+      // Seed workouts + exercises au premier lancement
       const seeded = await database.getFirstAsync<{ value: string }>(
         "SELECT value FROM settings WHERE key = 'data_seeded'"
       );
@@ -62,7 +57,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             );
           }
         }
-        // Seed default schedule
+        // Seed planning par défaut
         for (const [dayStr, wKey] of Object.entries(DEFAULT_SCHEDULE)) {
           await database.runAsync(
             "INSERT OR IGNORE INTO schedule (day_index, workout_key) VALUES (?, ?)",
@@ -70,7 +65,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           );
         }
 
-        // Migrate old overlay tables if they exist
+        // Migration depuis l'ancien schéma
         try {
           const oldNames = await database.getAllAsync<{ workout_key: string; custom_name: string }>(
             "SELECT workout_key, custom_name FROM workout_names"
@@ -99,7 +94,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           }
         } catch {}
 
-        // Drop old overlay tables
         try { await database.runAsync("DROP TABLE IF EXISTS workout_names"); } catch {}
         try { await database.runAsync("DROP TABLE IF EXISTS exercise_order"); } catch {}
 
@@ -108,29 +102,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         );
       }
 
-      const langRow = await database.getFirstAsync<{ value: string }>(
-        "SELECT value FROM settings WHERE key = 'language'"
-      );
-      if (langRow) setLangState(langRow.value as Lang);
       setDb(database);
     }
     init();
   }, []);
 
-  const setLang = (l: Lang) => {
-    setLangState(l);
-    if (db) {
-      db.runAsync(
-        "INSERT OR REPLACE INTO settings (key, value) VALUES ('language', ?)",
-        [l]
-      ).catch(() => {});
-    }
-  };
-
   return (
-    <SettingsContext.Provider
-      value={{ lang, setLang, t: translations[lang], db }}
-    >
+    <SettingsContext.Provider value={{ t: strings, db }}>
       {children}
     </SettingsContext.Provider>
   );

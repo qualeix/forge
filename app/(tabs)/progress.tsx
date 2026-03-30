@@ -16,9 +16,9 @@ import { useProgram } from "../../constants/ProgramContext";
 type WeightRow = { exercise_id: string; weight: number; date: string };
 
 export default function ProgressScreen() {
-  const { t, lang, db } = useSettings();
+  const { t, db } = useSettings();
   const { workouts, exercises, getWorkoutDisplayName } = useProgram();
-  const getExName = (ex: any) => lang === "fr" && ex.name_fr ? ex.name_fr : ex.name;
+  const getExName = (ex: any) => ex.name_fr || ex.name;
   const [weightMap, setWeightMap] = useState<Record<string, WeightRow>>({});
   const [activeExercise, setActiveExercise] = useState<{ id: string; name: string } | null>(null);
   const [weightInput, setWeightInput] = useState("");
@@ -81,7 +81,7 @@ export default function ProgressScreen() {
     await loadData(db);
   };
 
-  // Dynamic exercise groups from ProgramContext (exclude "home")
+  // Groupes d'exercices dynamiques depuis ProgramContext (sans "home")
   const exerciseGroups = workouts
     .filter((w) => w.key !== "home")
     .map((w) => ({
@@ -103,7 +103,7 @@ export default function ProgressScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Header */}
+        {/* En-tête */}
         <Animated.View style={[{ marginBottom: theme.spacing.xl }, animStyle(0)]}>
           <Text style={{
             color: theme.colors.textSecondary,
@@ -116,15 +116,6 @@ export default function ProgressScreen() {
           </Text>
         </Animated.View>
 
-        <Animated.View style={animStyle(0)}>
-          <Text style={{
-            color: theme.colors.textSecondary,
-            fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12,
-          }}>
-            {t.weights_title}
-          </Text>
-        </Animated.View>
-
         {exerciseGroups.map((group, gi) => (
           <Animated.View key={group.label + gi} style={[{ marginBottom: theme.spacing.md }, animStyle(gi + 1)]}>
             <Text style={{
@@ -134,7 +125,6 @@ export default function ProgressScreen() {
             }}>
               {group.label}
             </Text>
-            {/* Pixel-based amber halo — animates correctly with parent opacity */}
             <View style={{
               backgroundColor: "rgba(245,158,11,0.08)",
               borderRadius: theme.radius.lg + 1,
@@ -196,9 +186,9 @@ export default function ProgressScreen() {
                           {entry ? `${entry.weight}kg` : "—"}
                         </Text>
                         <Ionicons
-                          name={isActive ? "chevron-up" : "add-circle-outline"}
+                          name={isActive ? "chevron-up" : entry ? "create-outline" : "add-circle-outline"}
                           size={20}
-                          color={isActive ? theme.colors.amber : theme.colors.muted}
+                          color={isActive ? theme.colors.amber : entry ? theme.colors.amber : theme.colors.muted}
                         />
                       </Pressable>
 

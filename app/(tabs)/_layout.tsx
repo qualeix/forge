@@ -70,15 +70,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="progress"
-        options={{
-          title: t.tab_progress,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trending-up" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="program"
         options={{
           title: t.tab_program,
@@ -88,11 +79,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="progress"
         options={{
-          title: t.tab_settings,
+          title: t.tab_progress,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cog" size={size} color={color} />
+            <Ionicons name="trending-up" size={size} color={color} />
           ),
         }}
       />

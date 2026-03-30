@@ -65,7 +65,7 @@ const ProgramContext = createContext<ProgramCtx>({
 });
 
 export function ProgramProvider({ children }: { children: ReactNode }) {
-  const { db, lang } = useSettings();
+  const { db } = useSettings();
   const [schedule, setSchedule] = useState<Schedule>(DEFAULT_SCHEDULE);
   const [workouts, setWorkouts] = useState<WorkoutRecord[]>([]);
   const [exercises, setExercises] = useState<Record<string, ExerciseRecord[]>>({});
@@ -139,7 +139,7 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
   const getWorkoutDisplayName = (workoutKey: string) => {
     const w = workouts.find((x) => x.key === workoutKey);
     if (!w) return workoutKey;
-    return lang === "fr" ? w.name_fr : w.name;
+    return w.name_fr || w.name;
   };
 
   const assembleWorkout = (workoutKey: string) => {

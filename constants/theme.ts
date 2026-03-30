@@ -5,7 +5,6 @@ export const theme = {
     cardElevated: "#1C1C1C",
     border: "#252525",
     amber: "#F59E0B",
-    amberBright: "#FCD34D",
     amberGlow: "#D97706",
     amberDim: "#B45309",
     amberDeep: "#78350F",

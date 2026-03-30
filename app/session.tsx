@@ -17,7 +17,7 @@ import { theme } from "../constants/theme";
 import { useSettings } from "../constants/SettingsContext";
 import { useProgram } from "../constants/ProgramContext";
 
-// Reusable animated press button
+// Bouton animé réutilisable
 function ScalePress({
   onPress,
   children,
@@ -43,25 +43,22 @@ function ScalePress({
 
 export default function SessionScreen() {
   const router = useRouter();
-  const { t, lang, db } = useSettings();
-  const { getTodayWorkout, getWorkoutDisplayName, schedule } = useProgram();
+  const { t, db } = useSettings();
+  const { getTodayWorkout, getWorkoutDisplayName, schedule, loaded } = useProgram();
   const workout = getTodayWorkout();
   const goHome = () => {
     if (router.canGoBack()) router.back();
     else router.replace("/");
   };
-  const exName = (ex: any) => lang === "fr" && ex.name_fr ? ex.name_fr : ex.name;
-  const exCue = (ex: any) => lang === "fr" && ex.cue_fr ? ex.cue_fr : ex.cue;
-  const exTechnique = (ex: any) => lang === "fr" && ex.technique_fr ? ex.technique_fr : ex.technique;
+  const exName = (ex: any) => ex.name_fr || ex.name;
+  const exCue = (ex: any) => ex.cue_fr || ex.cue;
+  const exTechnique = (ex: any) => ex.technique_fr || ex.technique;
   const todayKey = schedule[new Date().getDay()];
   const workoutName = todayKey ? getWorkoutDisplayName(todayKey) : "";
 
   const [sessionExercises, setSessionExercises] = useState<any[]>(workout?.exercises ?? []);
-  // Track which exercise IDs are completed (all sets done)
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
-  // Track per-exercise set progress: exerciseId → sets completed
   const [setProgress, setSetProgress] = useState<Record<string, number>>({});
-  // The ID of the current exercise being worked on
   const [currentExerciseId, setCurrentExerciseId] = useState<string>(workout?.exercises?.[0]?.id ?? "");
 
   const [isResting, setIsResting] = useState(false);
@@ -93,7 +90,6 @@ export default function SessionScreen() {
   const currentSet = (setProgress[currentExerciseId] ?? 0) + 1;
   const completedCount = completedIds.size;
 
-  // Derived: remaining non-completed exercises (excluding current)
   const remainingExercises = exercises.filter(
     (e: any) => e.id !== currentExerciseId && !completedIds.has(e.id)
   );
@@ -101,11 +97,10 @@ export default function SessionScreen() {
   const isLastSet = currentSet === totalSets;
   const isLastExercise = completedCount === exercises.length - 1 && !completedIds.has(currentExerciseId);
 
-  // Reorder any non-completed exercise
+  // Remettre un exercice non terminé à une autre position
   const moveSessionExercise = (absIndex: number, direction: "up" | "down") => {
     const toIndex = direction === "up" ? absIndex - 1 : absIndex + 1;
     if (toIndex < 0 || toIndex >= exercises.length) return;
-    // Cannot swap into/out of completed positions
     if (completedIds.has(exercises[absIndex]?.id) || completedIds.has(exercises[toIndex]?.id)) return;
     setSessionExercises((prev: any[]) => {
       const next = [...prev];
@@ -114,7 +109,7 @@ export default function SessionScreen() {
     });
   };
 
-  // Block Android back button — show exit modal instead
+  // Bloquer le bouton retour Android
   useEffect(() => {
     const handler = () => {
       if (!sessionDone) setShowExitModal(true);
@@ -124,7 +119,7 @@ export default function SessionScreen() {
     return () => sub.remove();
   }, [sessionDone]);
 
-  // Load weights from context db
+  // Charger les poids depuis la DB
   useEffect(() => {
     if (!db) return;
     async function loadWeights() {
@@ -138,7 +133,18 @@ export default function SessionScreen() {
     loadWeights();
   }, [db]);
 
-  // Slide + fade in
+  // Enregistrer la séance terminée en DB
+  useEffect(() => {
+    if (sessionDone && db) {
+      const today = new Date().toISOString().slice(0, 10);
+      db.runAsync(
+        "INSERT OR REPLACE INTO settings (key, value) VALUES (?, '1')",
+        [`session_done_${today}`]
+      ).catch(() => {});
+    }
+  }, [sessionDone, db]);
+
+  // Animation entrée
   const animateIn = () => {
     fadeAnim.setValue(0);
     slideAnim.setValue(20);
@@ -150,7 +156,15 @@ export default function SessionScreen() {
 
   useEffect(() => { animateIn(); }, []);
 
-  // Breathing glow on SET DONE
+  // Synchroniser avec ProgramContext une fois chargé
+  useEffect(() => {
+    if (loaded && workout?.exercises?.length && sessionExercises.length === 0) {
+      setSessionExercises(workout.exercises);
+      setCurrentExerciseId(workout.exercises[0].id);
+    }
+  }, [loaded]);
+
+  // Lueur respiratoire sur SÉRIE TERMINÉE
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
@@ -162,7 +176,7 @@ export default function SessionScreen() {
     return () => loop.stop();
   }, []);
 
-  // Flash animation when timer is done
+  // Flash quand le timer est terminé
   useEffect(() => {
     if (!timerDone) {
       flashAnim.setValue(1);
@@ -178,14 +192,11 @@ export default function SessionScreen() {
     return () => loop.stop();
   }, [timerDone]);
 
-  // Find next non-completed exercise after the given one
   const findNextExerciseId = (afterId: string): string | null => {
     const idx = exercises.findIndex((e: any) => e.id === afterId);
-    // Look forward first
     for (let i = idx + 1; i < exercises.length; i++) {
       if (!completedIds.has(exercises[i].id)) return exercises[i].id;
     }
-    // Then look from beginning
     for (let i = 0; i < idx; i++) {
       if (!completedIds.has(exercises[i].id)) return exercises[i].id;
     }
@@ -194,7 +205,6 @@ export default function SessionScreen() {
 
   const advanceAfterRest = () => {
     if (restTypeRef.current === "exercise") {
-      // Move to next non-completed exercise
       const nextId = findNextExerciseId(currentExerciseId);
       if (nextId) {
         setCurrentExerciseId(nextId);
@@ -203,10 +213,9 @@ export default function SessionScreen() {
         chevronAnim.setValue(0);
       }
     }
-    // For "set" rest, nothing to change — same exercise, currentSet auto-increments via setProgress
   };
 
-  // Background-safe timer using timestamps + AppState
+  // Timer sécurisé en arrière-plan (basé sur timestamp)
   useEffect(() => {
     if (!isResting) {
       setTimerDone(false);
@@ -261,18 +270,15 @@ export default function SessionScreen() {
 
   const handleSetDone = () => {
     if (isLastSet && isLastExercise) {
-      // Mark current as completed too
       setCompletedIds((prev) => new Set([...prev, currentExerciseId]));
       setSessionDone(true);
       return;
     }
 
     if (isLastSet) {
-      // Exercise completed — mark it done, rest, then advance
       setCompletedIds((prev) => new Set([...prev, currentExerciseId]));
       restTypeRef.current = "exercise";
     } else {
-      // Set completed — increment progress, rest
       setSetProgress((prev) => ({ ...prev, [currentExerciseId]: (prev[currentExerciseId] ?? 0) + 1 }));
       restTypeRef.current = "set";
     }
@@ -303,7 +309,7 @@ export default function SessionScreen() {
 
   const restDuration = workout?.restSeconds ?? 90;
 
-  // ── EXIT MODAL ──
+  // ── MODAL QUITTER ──
   const ExitModal = (
     <Modal visible={showExitModal} transparent animationType="fade" statusBarTranslucent>
       <View style={{
@@ -398,6 +404,8 @@ export default function SessionScreen() {
     );
   }
 
+  if (workout && !currentExercise) return null;
+
   const restProgress = restSecondsLeft / restDuration;
   const restIsForExercise = restTypeRef.current === "exercise";
   const currentPR = prMap[currentExercise?.id ?? ""];
@@ -406,7 +414,7 @@ export default function SessionScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       {ExitModal}
 
-      {/* Header */}
+      {/* En-tête */}
       <View style={{
         flexDirection: "row",
         alignItems: "center",
@@ -425,7 +433,7 @@ export default function SessionScreen() {
         </Text>
       </View>
 
-      {/* Progress bar */}
+      {/* Barre de progression */}
       <View style={{ height: 2, backgroundColor: theme.colors.border, marginHorizontal: theme.spacing.lg, borderRadius: 1 }}>
         <View style={{
           height: 2,
@@ -441,26 +449,26 @@ export default function SessionScreen() {
         showsVerticalScrollIndicator={false}
       >
         {isResting ? (
-          /* ── REST SCREEN ── */
+          /* ── ÉCRAN REPOS ── */
           <View style={{ alignItems: "center", paddingTop: 24 }}>
             <Text style={{ color: theme.colors.textSecondary, fontSize: 11, letterSpacing: 3, textTransform: "uppercase", marginBottom: 36 }}>
               {timerDone ? t.session_times_up : t.session_rest}
             </Text>
 
-            {/* Timer ring */}
+            {/* Anneau timer */}
             <Animated.View style={{ width: 200, height: 200, alignItems: "center", justifyContent: "center", marginBottom: 36, opacity: flashAnim }}>
               <View style={{ position: "absolute", width: 200, height: 200, borderRadius: 100, borderWidth: 6, borderColor: theme.colors.border }} />
               <View style={{
                 position: "absolute", width: 200, height: 200,
                 borderRadius: 100, borderWidth: 6,
-                borderColor: timerDone ? theme.colors.amberBright : theme.colors.amber,
+                borderColor: timerDone ? theme.colors.amber : theme.colors.amber,
                 opacity: timerDone ? 1 : Math.max(0.1, restProgress),
                 shadowColor: theme.colors.amber,
                 shadowOffset: { width: 0, height: 0 },
                 shadowOpacity: timerDone ? 0.8 : 0.55 * restProgress,
                 shadowRadius: timerDone ? 24 : 16,
               }} />
-              <Text style={{ color: timerDone ? theme.colors.amberBright : theme.colors.amber, fontSize: 76, fontWeight: "900", lineHeight: 84 }}>
+              <Text style={{ color: timerDone ? theme.colors.amber : theme.colors.amber, fontSize: 76, fontWeight: "900", lineHeight: 84 }}>
                 {restSecondsLeft}
               </Text>
               <Text style={{ color: theme.colors.muted, fontSize: 12, letterSpacing: 1 }}>{t.session_seconds}</Text>
@@ -482,10 +490,7 @@ export default function SessionScreen() {
               </Text>
             )}
 
-            <ScalePress
-              onPress={skipRest}
-              style={{ marginTop: 16 }}
-            >
+            <ScalePress onPress={skipRest} style={{ marginTop: 16 }}>
               <View style={{
                 borderWidth: 1,
                 borderColor: theme.colors.border,
@@ -498,9 +503,9 @@ export default function SessionScreen() {
             </ScalePress>
           </View>
         ) : (
-          /* ── EXERCISE SCREEN ── */
+          /* ── ÉCRAN EXERCICE ── */
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-            {/* Set progress dots */}
+            {/* Points de progression séries */}
             <View style={{ flexDirection: "row", gap: 8, marginBottom: theme.spacing.xl }}>
               {Array.from({ length: totalSets }).map((_, i) => (
                 <View key={i} style={{
@@ -526,7 +531,7 @@ export default function SessionScreen() {
             </Text>
 
             <Text style={{
-              color: theme.colors.amberBright,
+              color: theme.colors.amber,
               fontSize: 26, fontWeight: "800",
               marginBottom: currentPR ? theme.spacing.md : theme.spacing.xl,
               shadowColor: theme.colors.amber,
@@ -537,7 +542,7 @@ export default function SessionScreen() {
               {currentExercise.reps}{typeof currentExercise.reps === "number" ? t.session_reps : ""}
             </Text>
 
-            {/* PR Weight Card */}
+            {/* Carte poids */}
             {currentPR != null && (
               <View style={{
                 backgroundColor: theme.colors.amberSubtle,
@@ -562,40 +567,46 @@ export default function SessionScreen() {
               </View>
             )}
 
-            {/* Technique card — smooth expand */}
-            <View style={{
-              backgroundColor: theme.colors.card,
-              borderRadius: theme.radius.lg,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              marginBottom: theme.spacing.lg,
-              overflow: "hidden",
-            }}>
-              <Pressable
-                onPress={toggleTechnique}
-                style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: theme.spacing.md }}
-              >
-                <Text style={{ color: theme.colors.amber, fontSize: 11, letterSpacing: 1.5, fontWeight: "700", textTransform: "uppercase" }}>
-                  {t.session_technique}
-                </Text>
-                <Animated.View style={{ transform: [{ rotate: chevronAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] }) }] }}>
-                  <Ionicons name="chevron-down" size={16} color={theme.colors.muted} />
-                </Animated.View>
-              </Pressable>
-              <Text style={{ color: theme.colors.textSecondary, fontSize: 14, lineHeight: 22, paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.md }}>
-                {exCue(currentExercise)}
-              </Text>
-              <Animated.View style={{
-                maxHeight: expandAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 200] }),
+            {/* Carte technique — masquée si ni conseil ni technique */}
+            {(exCue(currentExercise) || exTechnique(currentExercise)) ? (
+              <View style={{
+                backgroundColor: theme.colors.card,
+                borderRadius: theme.radius.lg,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                marginBottom: theme.spacing.lg,
                 overflow: "hidden",
               }}>
-                <Text style={{ color: theme.colors.textSecondary, fontSize: 14, lineHeight: 22, paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.md }}>
-                  {exTechnique(currentExercise)}
-                </Text>
-              </Animated.View>
-            </View>
+                <Pressable
+                  onPress={toggleTechnique}
+                  style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: theme.spacing.md }}
+                >
+                  <Text style={{ color: theme.colors.amber, fontSize: 11, letterSpacing: 1.5, fontWeight: "700", textTransform: "uppercase" }}>
+                    {t.session_technique}
+                  </Text>
+                  <Animated.View style={{ transform: [{ rotate: chevronAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] }) }] }}>
+                    <Ionicons name="chevron-down" size={16} color={theme.colors.muted} />
+                  </Animated.View>
+                </Pressable>
+                {exCue(currentExercise) ? (
+                  <Text style={{ color: theme.colors.textSecondary, fontSize: 14, lineHeight: 22, paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.md }}>
+                    {exCue(currentExercise)}
+                  </Text>
+                ) : null}
+                {exTechnique(currentExercise) ? (
+                  <Animated.View style={{
+                    maxHeight: expandAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 200] }),
+                    overflow: "hidden",
+                  }}>
+                    <Text style={{ color: theme.colors.textSecondary, fontSize: 14, lineHeight: 22, paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.md }}>
+                      {exTechnique(currentExercise)}
+                    </Text>
+                  </Animated.View>
+                ) : null}
+              </View>
+            ) : null}
 
-            {/* SET DONE — breathing glow + press scale */}
+            {/* SÉRIE TERMINÉE — lueur + scale */}
             <Animated.View style={{
               shadowColor: theme.colors.amber,
               shadowOffset: { width: 0, height: 0 },
@@ -620,13 +631,13 @@ export default function SessionScreen() {
                   gap: 10,
                 }}
               >
-                  <Text style={{ color: "#0D0D0D", fontSize: 18, fontWeight: "900", letterSpacing: 0.5 }}>
+                <Text style={{ color: "#0D0D0D", fontSize: 18, fontWeight: "900", letterSpacing: 0.5 }}>
                   {isLastSet && isLastExercise ? t.session_finish : t.session_set_done}
                 </Text>
               </Pressable>
             </Animated.View>
 
-            {/* Coming Up — all non-completed exercises with reorder */}
+            {/* À Suivre — exercices restants avec réorganisation */}
             {remainingExercises.length > 0 && (
               <View>
                 <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
@@ -641,7 +652,6 @@ export default function SessionScreen() {
                 }}>
                   {remainingExercises.map((ex: any, i: number) => {
                     const absIndex = exercises.findIndex((e: any) => e.id === ex.id);
-                    // Can move up if the position above is not completed
                     const canMoveUp = absIndex > 0 && !completedIds.has(exercises[absIndex - 1]?.id);
                     const canMoveDown = absIndex < exercises.length - 1 && !completedIds.has(exercises[absIndex + 1]?.id);
                     return (
@@ -651,10 +661,8 @@ export default function SessionScreen() {
                           <Text style={{ color: theme.colors.amberDim, fontSize: 11, fontWeight: "700", width: 24 }}>
                             {String(absIndex + 1).padStart(2, "0")}
                           </Text>
-                          {/* Tap to swap with current */}
                           <Pressable
                             onPress={() => {
-                              // Swap this exercise into the current position
                               setSessionExercises((prev: any[]) => {
                                 const next = [...prev];
                                 const curIdx = next.findIndex((e: any) => e.id === currentExerciseId);
@@ -664,7 +672,6 @@ export default function SessionScreen() {
                                 }
                                 return next;
                               });
-                              // Switch to the tapped exercise
                               setCurrentExerciseId(ex.id);
                               setExpandedCue(false);
                               expandAnim.setValue(0);
