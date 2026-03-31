@@ -262,7 +262,7 @@ export default function ProgramScreen() {
                     hitSlop={8}
                     style={{ padding: 4, marginRight: 4 }}
                   >
-                    <Ionicons name="create-outline" size={16} color={theme.colors.muted} />
+                    <Ionicons name="create-outline" size={16} color={theme.colors.amber} />
                   </ScalePress>
                   {/* Supprimer */}
                   <ScalePress
@@ -273,7 +273,7 @@ export default function ProgramScreen() {
                     hitSlop={8}
                     style={{ padding: 4, marginRight: 4 }}
                   >
-                    <Ionicons name="trash-outline" size={16} color={theme.colors.muted} />
+                    <Ionicons name="trash-outline" size={16} color="#EF4444" />
                   </ScalePress>
                   <Animated.View style={{
                     transform: [{ rotate: expandAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] }) }],
@@ -311,7 +311,7 @@ export default function ProgramScreen() {
                           <Ionicons name="create-outline" size={16} color={theme.colors.amber} />
                         </ScalePress>
                         <ScalePress onPress={() => removeExercise(workoutKey, ex.id)} hitSlop={8} style={{ padding: 2 }}>
-                          <Ionicons name="close-circle-outline" size={16} color={theme.colors.muted} />
+                          <Ionicons name="close-circle-outline" size={16} color="#EF4444" />
                         </ScalePress>
                       </View>
                     )}

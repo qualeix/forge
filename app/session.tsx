@@ -633,7 +633,7 @@ export default function SessionScreen() {
                   backgroundColor: theme.colors.card,
                   borderRadius: theme.radius.lg,
                   borderWidth: 1,
-                  borderColor: theme.colors.border,
+                  borderColor: theme.colors.amberDim,
                   overflow: "hidden",
                 }}>
                   <SortableList

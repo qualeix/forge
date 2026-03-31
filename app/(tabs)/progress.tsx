@@ -176,20 +176,22 @@ export default function ProgressScreen() {
                             </Text>
                           )}
                         </View>
-                        <Text style={{
-                          color: entry ? theme.colors.amber : theme.colors.muted,
-                          fontSize: 17, fontWeight: "900", marginRight: 4,
-                          shadowColor: entry ? theme.colors.amber : "transparent",
-                          shadowOffset: { width: 0, height: 0 },
-                          shadowOpacity: entry ? 0.5 : 0,
-                          shadowRadius: 8,
-                        }}>
-                          {entry ? `${entry.weight}kg` : "—"}
-                        </Text>
+                        {entry && (
+                          <Text style={{
+                            color: theme.colors.amber,
+                            fontSize: 17, fontWeight: "900", marginRight: 4,
+                            shadowColor: theme.colors.amber,
+                            shadowOffset: { width: 0, height: 0 },
+                            shadowOpacity: 0.5,
+                            shadowRadius: 8,
+                          }}>
+                            {entry.weight}kg
+                          </Text>
+                        )}
                         <Ionicons
                           name={isActive ? "chevron-up" : entry ? "create-outline" : "add-circle-outline"}
                           size={20}
-                          color={isActive ? theme.colors.amber : entry ? theme.colors.amber : theme.colors.muted}
+                          color={theme.colors.amber}
                         />
                       </ScalePress>
 
