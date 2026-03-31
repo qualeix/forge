@@ -24,15 +24,11 @@ export type AppStrings = {
   // Écran Progrès
   tracking: string;
   progress: string;
-  weights_title: string;
   save: string;
   weight_placeholder: string;
   weight_current: string;
   weight_today: string;
   weight_max_error: string;
-  // Écran Réglages
-  settings: string;
-  preferences: string;
   // Divers
   today_badge: string;
   date_locale: string;
@@ -45,7 +41,6 @@ export type AppStrings = {
   session_set_of: (s: number, total: number) => string;
   session_skip_rest: string;
   session_technique: string;
-  session_weight_hint: string;
   session_reps: string;
   session_set_done: string;
   session_finish: string;
@@ -64,7 +59,6 @@ export type AppStrings = {
   session_done: string;
   // Onglet Programme
   tab_program: string;
-  program_title: string;
   program_week: string;
   program_workouts: string;
   program_rest: string;
@@ -126,15 +120,11 @@ export const strings: AppStrings = {
 
   tracking: "Suivi",
   progress: "Progrès",
-  weights_title: "Poids",
   save: "OK",
   weight_placeholder: "Poids en kg",
   weight_current: "actuel",
   weight_today: "auj.",
   weight_max_error: "250kg max",
-
-  settings: "Réglages",
-  preferences: "Préférences",
 
   today_badge: "AUJOURD'HUI",
   date_locale: "fr-FR",
@@ -147,7 +137,6 @@ export const strings: AppStrings = {
   session_set_of: (s, total) => `Série ${s} sur ${total}`,
   session_skip_rest: "Passer",
   session_technique: "Technique",
-  session_weight_hint: "Ton poids — utilise comme référence",
   session_reps: " rép.",
   session_set_done: "SÉRIE TERMINÉE",
   session_finish: "TERMINER",
@@ -166,7 +155,6 @@ export const strings: AppStrings = {
   session_done: "OK",
 
   tab_program: "SÉANCES",
-  program_title: "Mon Programme",
   program_week: "Planning Semaine",
   program_workouts: "Séances",
   program_rest: "Repos",

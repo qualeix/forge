@@ -9,7 +9,6 @@ import { useSettings } from "../constants/SettingsContext";
 import { useMenu } from "../constants/MenuContext";
 import { useProgram } from "../constants/ProgramContext";
 import { setupNotificationChannel, rescheduleAll } from "../constants/notifications";
-import "../global.css";
 
 // Affiche les notifications même quand l'app est au premier plan
 Notifications.setNotificationHandler({

@@ -215,263 +215,207 @@ export const WORKOUT_DATA = {
 
 export const MENU_DATA = {
   monday: {
-    label: "Lundi",
-    type: "rest",
     meals: [
       {
         time: "8:00",
         name: "Œufs brouillés sur toast",
         details: "2 œufs brouillés au beurre, 2 tranches de pain complet, 1 verre de jus d'orange naturel",
-        kcal: 430, protein: 24, carbs: 52, fat: 14,
       },
       {
         time: "12:00",
         name: "Bowl thon riz",
         details: "1 boîte de thon (160g égoutté), 125g de riz blanc, vinaigrette huile d'olive + vinaigre de riz + citron",
-        kcal: 560, protein: 52, carbs: 58, fat: 10,
       },
       {
         time: "16:30",
         name: "Shake whey + banane",
         details: "1 shake Gold Standard Whey",
-        kcal: 310, protein: 30, carbs: 38, fat: 4,
       },
       {
         time: "18:30",
         name: "Cuisses de poulet + pâtes",
         details: "250g de cuisses de poulet désossées, marinade : huile d'olive, citron, ail, paprika, cumin. 200g de pâtes",
-        kcal: 620, protein: 52, carbs: 42, fat: 22,
       },
       {
         time: "20:00",
         name: "Yaourt grec",
         details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
-        kcal: 185, protein: 14, carbs: 22, fat: 4,
       },
     ],
-    totals: { kcal: 2105, protein: 172, carbs: 212, fat: 54 },
   },
   tuesday: {
-    label: "Mardi",
-    type: "gym",
     meals: [
       {
         time: "8:00",
         name: "Œufs sur toast",
         details: "3 œufs au plat, 2 tranches de pain complet, 1 banane, 1 verre de jus d'orange naturel",
-        kcal: 660, protein: 37, carbs: 72, fat: 20,
       },
       {
         time: "12:00",
         name: "Blanc de poulet + riz",
         details: "200g de blanc de poulet aux herbes, 125g de riz blanc, 100g de petits pois surgelés, sauce soja + citron",
-        kcal: 620, protein: 58, carbs: 72, fat: 7,
       },
       {
         time: "16:30",
         name: "Pré-séance : banane + whey",
         details: "1 banane, 1 shake Gold Standard Whey (lait demi-écrémé)",
-        kcal: 310, protein: 30, carbs: 38, fat: 4,
       },
       {
         time: "18:30",
         name: "Blanc de poulet + pâtes",
         details: "300g de blanc de poulet, 125g de pâtes, sauce tomate (ail, basilic, huile d'olive), 30g de grana padano",
-        kcal: 810, protein: 78, carbs: 82, fat: 15,
       },
       {
         time: "20:00",
         name: "Yaourt grec",
         details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
-        kcal: 185, protein: 14, carbs: 22, fat: 4,
       },
     ],
-    totals: { kcal: 2585, protein: 217, carbs: 286, fat: 50 },
   },
   wednesday: {
-    label: "Mercredi",
-    type: "rest",
     meals: [
       {
         time: "8:00",
         name: "Bowl yaourt",
         details: "200g de yaourt nature, 1 banane tranchée, 1 c. à soupe de miel, 1 verre de jus d'orange naturel",
-        kcal: 420, protein: 21, carbs: 72, fat: 3,
       },
       {
         time: "12:00",
         name: "Bowl thon riz",
         details: "1 boîte de thon (160g égoutté), 125g de riz blanc, vinaigrette huile d'olive + vinaigre de riz + citron",
-        kcal: 560, protein: 52, carbs: 58, fat: 10,
       },
       {
         time: "16:30",
         name: "Shake whey + banane",
         details: "1 shake Gold Standard Whey",
-        kcal: 310, protein: 30, carbs: 38, fat: 4,
       },
       {
         time: "18:30",
         name: "Saumon + pâtes",
         details: "150g de filet de saumon au citron et aneth, 200g de pâtes",
-        kcal: 580, protein: 40, carbs: 42, fat: 18,
       },
       {
         time: "20:00",
         name: "Yaourt grec",
         details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
-        kcal: 185, protein: 14, carbs: 22, fat: 4,
       },
     ],
-    totals: { kcal: 2055, protein: 157, carbs: 232, fat: 39 },
   },
   thursday: {
-    label: "Jeudi",
-    type: "rest",
     meals: [
       {
         time: "8:00",
         name: "Toast fromage blanc",
         details: "2 tranches de pain complet, 150g de fromage blanc, tomates cerises, sel et poivre, 1 verre de jus d'orange",
-        kcal: 430, protein: 28, carbs: 52, fat: 8,
       },
       {
         time: "12:00",
         name: "Bowl thon riz",
         details: "1 boîte de thon (160g égoutté), 125g de riz blanc, vinaigrette huile d'olive + vinaigre de riz + citron",
-        kcal: 560, protein: 52, carbs: 58, fat: 10,
       },
       {
         time: "16:30",
         name: "Shake whey + banane",
         details: "1 shake Gold Standard Whey",
-        kcal: 310, protein: 30, carbs: 38, fat: 4,
       },
       {
         time: "18:30",
         name: "Cuisses de poulet + pâtes",
         details: "250g de cuisses de poulet désossées, marinade : huile d'olive, citron, ail, paprika, cumin. 200g de pâtes",
-        kcal: 620, protein: 52, carbs: 42, fat: 22,
       },
       {
         time: "20:00",
         name: "Yaourt grec",
         details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
-        kcal: 185, protein: 14, carbs: 22, fat: 4,
       },
     ],
-    totals: { kcal: 2105, protein: 176, carbs: 212, fat: 48 },
   },
   friday: {
-    label: "Vendredi",
-    type: "gym",
     meals: [
       {
         time: "8:00",
         name: "Œufs pochés sur toast",
         details: "3 œufs pochés, 2 tranches de pain complet, 1 banane, 1 verre de jus d'orange naturel",
-        kcal: 660, protein: 37, carbs: 72, fat: 20,
       },
       {
         time: "12:00",
         name: "Blanc de poulet + riz",
         details: "200g de blanc de poulet aux herbes, 125g de riz blanc, 100g de petits pois surgelés, sauce soja + citron",
-        kcal: 620, protein: 58, carbs: 72, fat: 7,
       },
       {
         time: "16:30",
         name: "Pré-séance : banane + whey",
         details: "1 banane, 1 shake Gold Standard Whey (lait demi-écrémé)",
-        kcal: 310, protein: 30, carbs: 38, fat: 4,
       },
       {
         time: "18:30",
         name: "Blanc de poulet + pâtes",
         details: "300g de blanc de poulet, 125g de pâtes, sauce tomate (ail, basilic, huile d'olive), 30g de grana padano",
-        kcal: 810, protein: 78, carbs: 82, fat: 15,
       },
       {
         time: "20:00",
         name: "Yaourt grec",
         details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
-        kcal: 185, protein: 14, carbs: 22, fat: 4,
       },
     ],
-    totals: { kcal: 2585, protein: 217, carbs: 286, fat: 50 },
   },
   saturday: {
-    label: "Samedi",
-    type: "rest",
     meals: [
       {
         time: "8:00",
         name: "Œufs sur toast",
         details: "3 œufs brouillés avec tomates cerises, 2 tranches de pain complet, 1 verre de jus d'orange",
-        kcal: 490, protein: 30, carbs: 52, fat: 17,
       },
       {
         time: "12:00",
         name: "Bowl thon riz",
         details: "1 boîte de thon (160g égoutté), 125g de riz blanc, vinaigrette huile d'olive + vinaigre de riz + citron",
-        kcal: 560, protein: 52, carbs: 58, fat: 10,
       },
       {
         time: "16:30",
         name: "Shake whey + banane",
         details: "1 shake Gold Standard Whey",
-        kcal: 310, protein: 30, carbs: 38, fat: 4,
       },
       {
         time: "18:30",
         name: "Saumon + pâtes",
         details: "150g de filet de saumon au citron et aneth, 200g de pâtes",
-        kcal: 580, protein: 40, carbs: 42, fat: 18,
       },
       {
         time: "20:00",
         name: "Yaourt grec",
         details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
-        kcal: 185, protein: 14, carbs: 22, fat: 4,
       },
     ],
-    totals: { kcal: 2125, protein: 166, carbs: 212, fat: 53 },
   },
   sunday: {
-    label: "Dimanche",
-    type: "gym",
     meals: [
       {
         time: "8:00",
         name: "Œufs sur toast",
         details: "3 œufs au plat, 2 tranches de pain complet, 1 banane, 1 verre de jus d'orange naturel",
-        kcal: 660, protein: 37, carbs: 72, fat: 20,
       },
       {
         time: "12:00",
         name: "Blanc de poulet + riz",
         details: "200g de blanc de poulet aux herbes, 125g de riz blanc, 100g de petits pois surgelés, sauce soja + citron",
-        kcal: 620, protein: 58, carbs: 72, fat: 7,
       },
       {
         time: "16:30",
         name: "Pré-séance : banane + whey",
         details: "1 banane, 1 shake Gold Standard Whey (lait demi-écrémé)",
-        kcal: 310, protein: 30, carbs: 38, fat: 4,
       },
       {
         time: "18:30",
         name: "Blanc de poulet + pâtes",
         details: "300g de blanc de poulet, 125g de pâtes, sauce tomate (ail, basilic, huile d'olive), 30g de grana padano",
-        kcal: 810, protein: 78, carbs: 82, fat: 15,
       },
       {
         time: "20:00",
         name: "Yaourt grec",
         details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
-        kcal: 185, protein: 14, carbs: 22, fat: 4,
       },
     ],
-    totals: { kcal: 2585, protein: 217, carbs: 286, fat: 50 },
   },
 };
 
@@ -495,8 +439,4 @@ export const WEEK_DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 export function getTodayKey(): DayKey {
   const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
   return days[new Date().getDay()];
-}
-
-export function getTodayMenu() {
-  return MENU_DATA[getTodayKey()];
 }
