@@ -43,6 +43,37 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         "CREATE TABLE IF NOT EXISTS menu_meals (id INTEGER PRIMARY KEY AUTOINCREMENT, day_key TEXT NOT NULL, name TEXT NOT NULL, details TEXT NOT NULL DEFAULT '', time TEXT NOT NULL, sort_order INTEGER NOT NULL DEFAULT 0)"
       );
 
+      // Migration: add notif_enabled to menu_meals if not present
+      try {
+        await database.runAsync(
+          "ALTER TABLE menu_meals ADD COLUMN notif_enabled INTEGER NOT NULL DEFAULT 1"
+        );
+      } catch {}
+
+      // Migration: add notif_offset to menu_meals if not present
+      try {
+        await database.runAsync(
+          "ALTER TABLE menu_meals ADD COLUMN notif_offset INTEGER NOT NULL DEFAULT 0"
+        );
+      } catch {}
+
+      // Migration: add notif_enabled + notif_time to workouts if not present
+      try {
+        await database.runAsync(
+          "ALTER TABLE workouts ADD COLUMN notif_enabled INTEGER NOT NULL DEFAULT 1"
+        );
+      } catch {}
+      try {
+        await database.runAsync(
+          "ALTER TABLE workouts ADD COLUMN notif_time TEXT NOT NULL DEFAULT '08:00'"
+        );
+      } catch {}
+      try {
+        await database.runAsync(
+          "ALTER TABLE workouts ADD COLUMN notif_body TEXT NOT NULL DEFAULT ''"
+        );
+      } catch {}
+
       // Seed workouts + exercises au premier lancement
       const seeded = await database.getFirstAsync<{ value: string }>(
         "SELECT value FROM settings WHERE key = 'data_seeded'"

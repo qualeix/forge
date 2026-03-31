@@ -152,7 +152,7 @@ export default function ProgressScreen() {
                       {i > 0 && (
                         <View style={{ height: 1, backgroundColor: theme.colors.border, marginHorizontal: 16 }} />
                       )}
-                      <ScalePress
+                      <Pressable
                         onPress={() => {
                           if (isActive) {
                             setActiveExercise(null);
@@ -193,7 +193,7 @@ export default function ProgressScreen() {
                           size={20}
                           color={theme.colors.amber}
                         />
-                      </ScalePress>
+                      </Pressable>
 
                       {isActive && (
                         <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
@@ -246,7 +246,7 @@ export default function ProgressScreen() {
                                   justifyContent: "center",
                                 }}
                               >
-                                <Ionicons name="close-circle-outline" size={16} color={theme.colors.muted} />
+                                <Ionicons name="close-circle-outline" size={16} color={"#EF4444"} />
                               </ScalePress>
                             )}
                           </View>

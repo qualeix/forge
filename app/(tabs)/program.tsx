@@ -247,7 +247,7 @@ export default function ProgramScreen() {
                     <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: "700" }}>
                       {getWorkoutDisplayName(workoutKey)}
                     </Text>
-                    <Text style={{ color: theme.colors.muted, fontSize: 12, marginTop: 2 }}>
+                    <Text style={{ color: theme.colors.textSecondary, fontSize: 12, marginTop: 2 }}>
                       {exs.length > 0 ? t.program_exercises(exs.length) : t.program_no_exercises}
                     </Text>
                   </View>
@@ -278,7 +278,7 @@ export default function ProgramScreen() {
                   <Animated.View style={{
                     transform: [{ rotate: expandAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] }) }],
                   }}>
-                    <Ionicons name="chevron-down" size={18} color={theme.colors.muted} />
+                    <Ionicons name="chevron-down" size={18} color={isExpanded ? theme.colors.amber : theme.colors.muted} />
                   </Animated.View>
                 </Pressable>
 
@@ -304,7 +304,7 @@ export default function ProgramScreen() {
                         <Text style={{ color: theme.colors.text, fontSize: 13, fontWeight: "600", flex: 1 }}>
                           {getExName(ex)}
                         </Text>
-                        <Text style={{ color: theme.colors.muted, fontSize: 11, marginRight: 4 }}>
+                        <Text style={{ color: theme.colors.textSecondary, fontSize: 12, fontWeight: "600", marginRight: 4 }}>
                           {ex.sets}×{ex.reps}
                         </Text>
                         <ScalePress onPress={() => openExerciseModal(workoutKey, ex)} hitSlop={8} style={{ padding: 2 }}>
@@ -374,7 +374,7 @@ export default function ProgramScreen() {
                 </Text>
               </View>
               <ScalePress onPress={() => setAssignModal(null)} hitSlop={8} style={{ padding: 4 }}>
-                <Ionicons name="close" size={22} color={theme.colors.muted} />
+                <Ionicons name="close" size={26} color={theme.colors.amber} />
               </ScalePress>
             </View>
             <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
@@ -432,7 +432,7 @@ export default function ProgramScreen() {
                 {t.program_rename}
               </Text>
               <ScalePress onPress={() => setRenameModal(null)} hitSlop={8} style={{ padding: 4 }}>
-                <Ionicons name="close" size={22} color={theme.colors.muted} />
+                <Ionicons name="close" size={26} color={theme.colors.amber} />
               </ScalePress>
             </View>
             <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>
@@ -492,7 +492,7 @@ export default function ProgramScreen() {
                 {t.program_new_workout}
               </Text>
               <ScalePress onPress={() => setShowCreateModal(false)} hitSlop={8} style={{ padding: 4 }}>
-                <Ionicons name="close" size={22} color={theme.colors.muted} />
+                <Ionicons name="close" size={26} color={theme.colors.amber} />
               </ScalePress>
             </View>
             <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>
@@ -569,7 +569,7 @@ export default function ProgramScreen() {
                   {exerciseModal?.exercise ? t.program_edit_exercise : t.program_add_exercise}
                 </Text>
                 <ScalePress onPress={() => setExerciseModal(null)} hitSlop={8} style={{ padding: 4 }}>
-                  <Ionicons name="close" size={22} color={theme.colors.muted} />
+                  <Ionicons name="close" size={26} color={theme.colors.amber} />
                 </ScalePress>
               </View>
 

@@ -77,7 +77,7 @@ function EditMealModal({
                 {meal ? t.meals_edit_meal : t.meals_add_meal_title}
               </Text>
               <ScalePress onPress={onClose} hitSlop={8} style={{ padding: 4 }}>
-                <Ionicons name="close" size={22} color={theme.colors.muted} />
+                <Ionicons name="close" size={26} color={theme.colors.amber} />
               </ScalePress>
             </View>
 
@@ -258,6 +258,9 @@ function ExpandableDay({ dayKey, isToday }: { dayKey: DayKey; isToday: boolean }
                       </Text>
                     )}
                   </View>
+                  {meal.notif_enabled === 0 && (
+                    <Ionicons name="notifications-off-outline" size={13} color={theme.colors.muted} />
+                  )}
                   <Text style={{ color: theme.colors.amber, fontWeight: "800", fontSize: 13, marginRight: 4 }}>{meal.time}</Text>
                   <ScalePress onPress={() => setEditingMeal(meal)} hitSlop={6} style={{ padding: 6 }}>
                     <Ionicons name="create-outline" size={17} color={theme.colors.amber} />
@@ -288,7 +291,7 @@ function ExpandableDay({ dayKey, isToday }: { dayKey: DayKey; isToday: boolean }
         onClose={() => setEditingMeal(null)}
         onSave={async (fields) => {
           if (editingMeal === "new") {
-            await addMeal(dayKey, fields);
+            await addMeal(dayKey, { ...fields, notif_enabled: 1 });
           } else if (editingMeal) {
             await updateMeal((editingMeal as MenuMeal).id, fields);
           }
@@ -325,7 +328,7 @@ function WeeklyMenuModal({ visible, onClose }: { visible: boolean; onClose: () =
             </Text>
           </View>
           <ScalePress onPress={onClose} style={{ padding: 8 }}>
-            <Ionicons name="close" size={24} color={theme.colors.muted} />
+            <Ionicons name="close" size={26} color={theme.colors.amber} />
           </ScalePress>
         </View>
 

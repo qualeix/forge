@@ -10,6 +10,9 @@ export type WorkoutRecord = {
   name_fr: string;
   restSeconds: number;
   sortOrder: number;
+  notifEnabled: number;
+  notifTime: string;
+  notifBody: string;
 };
 
 export type ExerciseRecord = {
@@ -37,7 +40,7 @@ type ProgramCtx = {
   getTodayWorkout: () => any;
   createWorkout: (name: string, nameFr: string) => Promise<string>;
   deleteWorkout: (workoutKey: string) => Promise<void>;
-  updateWorkout: (workoutKey: string, fields: Partial<Pick<WorkoutRecord, "name" | "name_fr" | "restSeconds">>) => void;
+  updateWorkout: (workoutKey: string, fields: Partial<Pick<WorkoutRecord, "name" | "name_fr" | "restSeconds" | "notifEnabled" | "notifTime" | "notifBody">>) => void;
   addExercise: (workoutKey: string, ex: Omit<ExerciseRecord, "workoutKey" | "sortOrder">) => Promise<void>;
   removeExercise: (workoutKey: string, exerciseId: string) => Promise<void>;
   updateExercise: (workoutKey: string, exerciseId: string, fields: Partial<Omit<ExerciseRecord, "id" | "workoutKey" | "sortOrder">>) => void;
@@ -87,14 +90,17 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
 
     // Workouts (exclude "home" from assignable list display — it's still in DB)
     const wRows = await db.getAllAsync<{
-      key: string; name: string; name_fr: string; rest_seconds: number; sort_order: number;
-    }>("SELECT key, name, name_fr, rest_seconds, sort_order FROM workouts ORDER BY sort_order");
+      key: string; name: string; name_fr: string; rest_seconds: number; sort_order: number; notif_enabled: number; notif_time: string; notif_body: string;
+    }>("SELECT key, name, name_fr, rest_seconds, sort_order, notif_enabled, notif_time, notif_body FROM workouts ORDER BY sort_order");
     setWorkouts(wRows.map((r) => ({
       key: r.key,
       name: r.name,
       name_fr: r.name_fr,
       restSeconds: r.rest_seconds,
       sortOrder: r.sort_order,
+      notifEnabled: r.notif_enabled ?? 1,
+      notifTime: r.notif_time ?? "08:00",
+      notifBody: r.notif_body ?? "",
     })));
 
     // Exercises grouped by workout_key
@@ -201,12 +207,15 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
     await load();
   };
 
-  const updateWorkout = (workoutKey: string, fields: Partial<Pick<WorkoutRecord, "name" | "name_fr" | "restSeconds">>) => {
+  const updateWorkout = (workoutKey: string, fields: Partial<Pick<WorkoutRecord, "name" | "name_fr" | "restSeconds" | "notifEnabled" | "notifTime" | "notifBody">>) => {
     setWorkouts((prev) => prev.map((w) => w.key === workoutKey ? { ...w, ...fields } : w));
     if (db) {
       if (fields.name !== undefined) db.runAsync("UPDATE workouts SET name = ? WHERE key = ?", [fields.name, workoutKey]).catch(() => {});
       if (fields.name_fr !== undefined) db.runAsync("UPDATE workouts SET name_fr = ? WHERE key = ?", [fields.name_fr, workoutKey]).catch(() => {});
       if (fields.restSeconds !== undefined) db.runAsync("UPDATE workouts SET rest_seconds = ? WHERE key = ?", [fields.restSeconds, workoutKey]).catch(() => {});
+      if (fields.notifEnabled !== undefined) db.runAsync("UPDATE workouts SET notif_enabled = ? WHERE key = ?", [fields.notifEnabled, workoutKey]).catch(() => {});
+      if (fields.notifTime !== undefined) db.runAsync("UPDATE workouts SET notif_time = ? WHERE key = ?", [fields.notifTime, workoutKey]).catch(() => {});
+      if (fields.notifBody !== undefined) db.runAsync("UPDATE workouts SET notif_body = ? WHERE key = ?", [fields.notifBody, workoutKey]).catch(() => {});
     }
   };
 

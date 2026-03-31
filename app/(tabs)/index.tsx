@@ -12,21 +12,21 @@ import { getTodayKey } from "../../constants/data";
 export default function TodayScreen() {
   const router = useRouter();
   const { t, db } = useSettings();
-  const { getTodayWorkout, schedule, getWorkoutDisplayName } = useProgram();
+  const { getTodayWorkout, schedule, getWorkoutDisplayName, loaded: programLoaded } = useProgram();
   const { menuData } = useMenu();
   const todayWorkout = getTodayWorkout();
   const todayWorkoutKey = schedule[new Date().getDay()];
   const workoutName = todayWorkoutKey ? getWorkoutDisplayName(todayWorkoutKey) : "";
 
   const [sessionDoneToday, setSessionDoneToday] = useState(false);
-  const today = new Date().toISOString().slice(0, 10);
 
   useFocusEffect(
     useCallback(() => {
       if (!db) return;
+      const todayKey = new Date().toISOString().slice(0, 10);
       db.getFirstAsync<{ value: string }>(
         "SELECT value FROM settings WHERE key = ?",
-        [`session_done_${today}`]
+        [`session_done_${todayKey}`]
       ).then((row) => {
         setSessionDoneToday(!!row);
       }).catch(() => {});
@@ -65,6 +65,8 @@ export default function TodayScreen() {
     opacity: anims[i],
     transform: [{ translateY: anims[i].interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
   });
+
+  if (!programLoaded) return <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={["top"]} />;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={["top"]}>
@@ -122,15 +124,12 @@ export default function TodayScreen() {
                   {t.exercises_rest(todayWorkout.exercises.length, (todayWorkout as any).restSeconds ?? 90)}
                 </Text>
                 <View style={{ gap: 8, marginBottom: theme.spacing.lg }}>
-                  {todayWorkout.exercises.map((ex, i) => (
+                  {todayWorkout.exercises.map((ex) => (
                     <View key={ex.id} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                      <Text style={{ color: theme.colors.amberDim, fontSize: 12, fontWeight: "700", width: 20 }}>
-                        {String(i + 1).padStart(2, "0")}
-                      </Text>
                       <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "600", flex: 1 }}>
                         {(ex as any).name_fr || ex.name}
                       </Text>
-                      <Text style={{ color: theme.colors.muted, fontSize: 12 }}>
+                      <Text style={{ color: theme.colors.textSecondary, fontSize: 12, fontWeight: "600" }}>
                         {ex.sets}×{ex.reps}
                       </Text>
                     </View>

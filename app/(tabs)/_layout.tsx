@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Animated, Pressable } from "react-native";
 import { useRef } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { theme } from "../../constants/theme";
 import { useSettings } from "../../constants/SettingsContext";
 
@@ -27,6 +28,7 @@ function AnimatedTabButton(props: any) {
 
 export default function TabLayout() {
   const { t } = useSettings();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -37,8 +39,8 @@ export default function TabLayout() {
           backgroundColor: theme.colors.card,
           borderTopColor: theme.colors.border,
           borderTopWidth: 1,
-          height: 80,
-          paddingBottom: 18,
+          height: 62 + insets.bottom,
+          paddingBottom: insets.bottom,
           elevation: 0,
           shadowOpacity: 0,
         },
@@ -84,6 +86,15 @@ export default function TabLayout() {
           title: t.tab_progress,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? "stats-chart" : "stats-chart-outline"} size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: t.tab_settings,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "options" : "options-outline"} size={size} color={color} />
           ),
         }}
       />

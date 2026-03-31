@@ -28,7 +28,11 @@
     },
     "plugins": [
       "expo-sqlite",
-      "expo-router"
+      "expo-router",
+      ["expo-notifications", {
+        "icon": "./assets/notification-icon.png",
+        "color": "#F59E0B"
+      }]
     ],
     "extra": {
       "router": {},

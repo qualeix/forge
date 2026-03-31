@@ -8,7 +8,10 @@ import {
   AppState,
   Vibration,
   BackHandler,
+  TextInput,
 } from "react-native";
+import * as Notifications from "expo-notifications";
+import { NOTIF_CHANNEL } from "../constants/notifications";
 import { SortableList } from "../components/SortableList";
 import { ScalePress } from "../components/ScalePress";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -49,12 +52,16 @@ export default function SessionScreen() {
   const [sessionDone, setSessionDone] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [prMap, setPrMap] = useState<Record<string, number>>({});
+  const [weightEditing, setWeightEditing] = useState(false);
+  const [weightInput, setWeightInput] = useState("");
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const doneTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const restEndTimeRef = useRef<number>(0);
   const timerFiredRef = useRef(false);
   const restTypeRef = useRef<"set" | "exercise">("set");
+  const restNotifIdRef = useRef<string | null>(null);
+  const notifTimerEnabledRef = useRef(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -100,6 +107,16 @@ export default function SessionScreen() {
     return () => sub.remove();
   }, [sessionDone]);
 
+  // Charger le réglage notification timer
+  useEffect(() => {
+    if (!db) return;
+    db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM settings WHERE key = 'notif_timer_on'"
+    ).then((row) => {
+      notifTimerEnabledRef.current = row ? row.value === "1" : false;
+    }).catch(() => {});
+  }, [db]);
+
   // Charger les poids depuis la DB
   useEffect(() => {
     if (!db) return;
@@ -114,6 +131,21 @@ export default function SessionScreen() {
     loadWeights();
   }, [db]);
 
+  const saveWeight = async () => {
+    if (!db || !currentExercise) return;
+    const w = parseFloat(weightInput.replace(",", "."));
+    if (!w || w <= 0 || w > 250) return;
+    const today = new Date().toISOString().slice(0, 10);
+    await db.runAsync("DELETE FROM pr_entries WHERE exercise_id = ?", [currentExercise.id]);
+    await db.runAsync(
+      "INSERT INTO pr_entries (exercise_id, weight, date) VALUES (?, ?, ?)",
+      [currentExercise.id, w, today]
+    );
+    setPrMap((prev) => ({ ...prev, [currentExercise.id]: w }));
+    setWeightInput("");
+    setWeightEditing(false);
+  };
+
   // Enregistrer la séance terminée en DB
   useEffect(() => {
     if (sessionDone && db) {
@@ -124,6 +156,12 @@ export default function SessionScreen() {
       ).catch(() => {});
     }
   }, [sessionDone, db]);
+
+  // Fermer l'édition poids quand on change d'exercice
+  useEffect(() => {
+    setWeightEditing(false);
+    setWeightInput("");
+  }, [currentExerciseId]);
 
   // Animation entrée
   const animateIn = () => {
@@ -210,6 +248,31 @@ export default function SessionScreen() {
     setRestSecondsLeft(restDuration);
     setTimerDone(false);
 
+    // Planifier la notification de fin de repos
+    if (notifTimerEnabledRef.current) {
+      let body = "";
+      if (restTypeRef.current === "exercise") {
+        const nextId = findNextExerciseId(currentExerciseId);
+        const nextEx = nextId ? exercises.find((e: any) => e.id === nextId) : null;
+        body = nextEx ? exName(nextEx) : "Séance terminée !";
+      } else {
+        body = `${exName(currentExercise)} · série ${currentSet} sur ${totalSets}`;
+      }
+      Notifications.scheduleNotificationAsync({
+        content: {
+          title: "⏱ C'est reparti !",
+          body,
+          data: { type: "timer" },
+          sound: true,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: restDuration,
+          channelId: NOTIF_CHANNEL,
+        } as any,
+      }).then((id) => { restNotifIdRef.current = id; }).catch(() => {});
+    }
+
     const handleTimerDone = () => {
       if (timerFiredRef.current) return;
       timerFiredRef.current = true;
@@ -218,6 +281,9 @@ export default function SessionScreen() {
       Vibration.vibrate([0, 500, 200, 500]);
 
       doneTimeoutRef.current = setTimeout(() => {
+        // Dismiss la notification de fin de repos
+        Notifications.dismissAllNotificationsAsync().catch(() => {});
+        restNotifIdRef.current = null;
         advanceAfterRest();
         setIsResting(false);
         setTimerDone(false);
@@ -269,6 +335,11 @@ export default function SessionScreen() {
   const skipRest = () => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     if (doneTimeoutRef.current) { clearTimeout(doneTimeoutRef.current); doneTimeoutRef.current = null; }
+    // Annuler la notification planifiée (pas encore délivrée)
+    if (restNotifIdRef.current) {
+      Notifications.cancelScheduledNotificationAsync(restNotifIdRef.current).catch(() => {});
+      restNotifIdRef.current = null;
+    }
     timerFiredRef.current = true;
     setTimerDone(false);
     advanceAfterRest();
@@ -404,7 +475,7 @@ export default function SessionScreen() {
         paddingVertical: theme.spacing.md,
       }}>
         <ScalePress onPress={() => setShowExitModal(true)}>
-          <Ionicons name="close" size={24} color={theme.colors.muted} />
+          <Ionicons name="close" size={26} color={theme.colors.amber} />
         </ScalePress>
         <Text style={{ color: theme.colors.text, fontSize: 13, fontWeight: "700", letterSpacing: 1.5 }}>
           {workoutName.toUpperCase()}
@@ -452,7 +523,7 @@ export default function SessionScreen() {
               <Text style={{ color: timerDone ? theme.colors.amber : theme.colors.amber, fontSize: 76, fontWeight: "900", lineHeight: 84 }}>
                 {restSecondsLeft}
               </Text>
-              <Text style={{ color: theme.colors.muted, fontSize: 12, letterSpacing: 1 }}>{t.session_seconds}</Text>
+              <Text style={{ color: theme.colors.textSecondary, fontSize: 12, letterSpacing: 1 }}>{t.session_seconds}</Text>
             </Animated.View>
 
             <Text style={{ color: theme.colors.textSecondary, fontSize: 13, marginBottom: 6 }}>{t.session_up_next}</Text>
@@ -503,7 +574,7 @@ export default function SessionScreen() {
               ))}
             </View>
 
-            <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>
               {t.session_set_of(currentSet, totalSets)}
             </Text>
 
@@ -523,30 +594,90 @@ export default function SessionScreen() {
               {currentExercise.reps}{typeof currentExercise.reps === "number" ? t.session_reps : ""}
             </Text>
 
-            {/* Carte poids */}
-            {currentPR != null && (
-              <View style={{
-                backgroundColor: theme.colors.amberSubtle,
+            {/* Carte poids — tap pour éditer */}
+            <Pressable
+              onPress={() => {
+                if (!weightEditing) {
+                  setWeightInput(currentPR != null ? String(currentPR) : "");
+                  setWeightEditing(true);
+                }
+              }}
+              style={{
+                backgroundColor: weightEditing ? theme.colors.cardElevated : (currentPR != null ? theme.colors.amberSubtle : theme.colors.card),
                 borderRadius: theme.radius.md,
                 borderWidth: 1,
-                borderColor: theme.colors.amberDeep,
+                borderColor: weightEditing ? theme.colors.amberDim : (currentPR != null ? theme.colors.amberDeep : theme.colors.border),
                 padding: 14,
                 marginBottom: theme.spacing.xl,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-              }}>
-                <Ionicons name="barbell-outline" size={20} color={theme.colors.amber} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: theme.colors.amber, fontSize: 18, fontWeight: "900" }}>
-                    {currentPR} kg
-                  </Text>
-                  <Text style={{ color: theme.colors.amberDim, fontSize: 11, marginTop: 1 }}>
-                    {t.session_weight_hint}
-                  </Text>
+              }}
+            >
+              {weightEditing ? (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                  <TextInput
+                    value={weightInput}
+                    onChangeText={setWeightInput}
+                    placeholder={currentPR != null ? String(currentPR) : "0.0"}
+                    placeholderTextColor={theme.colors.muted}
+                    keyboardType="decimal-pad"
+                    returnKeyType="done"
+                    autoFocus
+                    onSubmitEditing={saveWeight}
+                    style={{
+                      flex: 1,
+                      backgroundColor: theme.colors.bg,
+                      borderRadius: theme.radius.sm,
+                      borderWidth: 1,
+                      borderColor: theme.colors.amberDim,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      color: theme.colors.text,
+                      fontSize: 18,
+                      fontWeight: "800",
+                    }}
+                  />
+                  <Text style={{ color: theme.colors.textSecondary, fontSize: 15, fontWeight: "700" }}>kg</Text>
+                  <ScalePress onPress={saveWeight} style={{
+                    backgroundColor: theme.colors.amber,
+                    borderRadius: theme.radius.sm,
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                  }}>
+                    <Ionicons name="checkmark" size={18} color="#0D0D0D" />
+                  </ScalePress>
+                  <ScalePress onPress={() => { setWeightEditing(false); setWeightInput(""); }} style={{
+                    backgroundColor: theme.colors.cardElevated,
+                    borderRadius: theme.radius.sm,
+                    borderWidth: 1,
+                    borderColor: theme.colors.border,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                  }}>
+                    <Ionicons name="close" size={18} color={theme.colors.muted} />
+                  </ScalePress>
                 </View>
-              </View>
-            )}
+              ) : (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  <Ionicons name="barbell-outline" size={20} color={currentPR != null ? theme.colors.amber : theme.colors.muted} />
+                  <View style={{ flex: 1 }}>
+                    {currentPR != null ? (
+                      <>
+                        <Text style={{ color: theme.colors.amber, fontSize: 18, fontWeight: "900" }}>
+                          {currentPR} kg
+                        </Text>
+                        <Text style={{ color: theme.colors.amberDim, fontSize: 11, marginTop: 1 }}>
+                          {t.session_weight_hint}
+                        </Text>
+                      </>
+                    ) : (
+                      <Text style={{ color: theme.colors.muted, fontSize: 14, fontWeight: "600" }}>
+                        Ajouter un poids
+                      </Text>
+                    )}
+                  </View>
+                  <Ionicons name="create-outline" size={16} color={currentPR != null ? theme.colors.amber : theme.colors.muted} />
+                </View>
+              )}
+            </Pressable>
 
             {/* Carte technique — masquée si ni conseil ni technique */}
             {(exCue(currentExercise) || exTechnique(currentExercise)) ? (
@@ -566,7 +697,7 @@ export default function SessionScreen() {
                     {t.session_technique}
                   </Text>
                   <Animated.View style={{ transform: [{ rotate: chevronAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] }) }] }}>
-                    <Ionicons name="chevron-down" size={16} color={theme.colors.muted} />
+                    <Ionicons name="chevron-down" size={16} color={expandedCue ? theme.colors.amber : theme.colors.muted} />
                   </Animated.View>
                 </Pressable>
                 {exCue(currentExercise) ? (
@@ -622,10 +753,10 @@ export default function SessionScreen() {
             {remainingExercises.length > 0 && (
               <View>
                 <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
-                  <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>
+                  <Text style={{ color: theme.colors.textSecondary, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>
                     {t.session_coming_up}
                   </Text>
-                  <Text style={{ color: theme.colors.muted, fontSize: 10, fontStyle: "italic" }}>
+                  <Text style={{ color: theme.colors.textSecondary, fontSize: 11, fontStyle: "italic" }}>
                     (Appuyez sur un exercice pour remplacer celui en cours)
                   </Text>
                 </View>
@@ -665,7 +796,7 @@ export default function SessionScreen() {
                             {exName(ex)}
                           </Text>
                         </Pressable>
-                        <Text style={{ color: theme.colors.muted, fontSize: 11, marginRight: 4 }}>
+                        <Text style={{ color: theme.colors.textSecondary, fontSize: 12, fontWeight: "600", marginRight: 4 }}>
                           {ex.sets}×{ex.reps}
                         </Text>
                       </View>
