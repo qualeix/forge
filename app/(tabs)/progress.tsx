@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { theme } from "../../constants/theme";
 import { useSettings } from "../../constants/SettingsContext";
@@ -54,6 +55,10 @@ export default function ProgressScreen() {
   useEffect(() => {
     if (db) loadData(db);
   }, [db, loadData]);
+
+  useFocusEffect(useCallback(() => {
+    if (db) loadData(db);
+  }, [db, loadData]));
 
   const saveWeight = async () => {
     if (!db || !activeExercise) return;

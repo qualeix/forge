@@ -146,6 +146,14 @@ export default function SessionScreen() {
     setWeightEditing(false);
   };
 
+  const clearWeight = async () => {
+    if (!db || !currentExercise) return;
+    await db.runAsync("DELETE FROM pr_entries WHERE exercise_id = ?", [currentExercise.id]);
+    setPrMap((prev) => { const next = { ...prev }; delete next[currentExercise.id]; return next; });
+    setWeightInput("");
+    setWeightEditing(false);
+  };
+
   // Enregistrer la séance terminée en DB
   useEffect(() => {
     if (sessionDone && db) {
@@ -585,7 +593,7 @@ export default function SessionScreen() {
             <Text style={{
               color: theme.colors.amber,
               fontSize: 26, fontWeight: "800",
-              marginBottom: currentPR ? theme.spacing.md : theme.spacing.xl,
+              marginBottom: theme.spacing.md,
               shadowColor: theme.colors.amber,
               shadowOffset: { width: 0, height: 0 },
               shadowOpacity: 0.5,
@@ -594,90 +602,91 @@ export default function SessionScreen() {
               {currentExercise.reps}{typeof currentExercise.reps === "number" ? t.session_reps : ""}
             </Text>
 
-            {/* Carte poids — tap pour éditer */}
-            <Pressable
-              onPress={() => {
-                if (!weightEditing) {
-                  setWeightInput(currentPR != null ? String(currentPR) : "");
-                  setWeightEditing(true);
-                }
-              }}
-              style={{
-                backgroundColor: weightEditing ? theme.colors.cardElevated : (currentPR != null ? theme.colors.amberSubtle : theme.colors.card),
-                borderRadius: theme.radius.md,
-                borderWidth: 1,
-                borderColor: weightEditing ? theme.colors.amberDim : (currentPR != null ? theme.colors.amberDeep : theme.colors.border),
-                padding: 14,
-                marginBottom: theme.spacing.xl,
-              }}
-            >
-              {weightEditing ? (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                  <TextInput
-                    value={weightInput}
-                    onChangeText={setWeightInput}
-                    placeholder={currentPR != null ? String(currentPR) : "0.0"}
-                    placeholderTextColor={theme.colors.muted}
-                    keyboardType="decimal-pad"
-                    returnKeyType="done"
-                    autoFocus
-                    onSubmitEditing={saveWeight}
-                    style={{
-                      flex: 1,
-                      backgroundColor: theme.colors.bg,
-                      borderRadius: theme.radius.sm,
-                      borderWidth: 1,
-                      borderColor: theme.colors.amberDim,
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      color: theme.colors.text,
-                      fontSize: 18,
-                      fontWeight: "800",
-                    }}
-                  />
-                  <Text style={{ color: theme.colors.textSecondary, fontSize: 15, fontWeight: "700" }}>kg</Text>
-                  <ScalePress onPress={saveWeight} style={{
-                    backgroundColor: theme.colors.amber,
-                    borderRadius: theme.radius.sm,
-                    paddingHorizontal: 14,
-                    paddingVertical: 10,
-                  }}>
-                    <Ionicons name="checkmark" size={18} color="#0D0D0D" />
-                  </ScalePress>
-                  <ScalePress onPress={() => { setWeightEditing(false); setWeightInput(""); }} style={{
-                    backgroundColor: theme.colors.cardElevated,
-                    borderRadius: theme.radius.sm,
-                    borderWidth: 1,
-                    borderColor: theme.colors.border,
-                    paddingHorizontal: 12,
-                    paddingVertical: 10,
-                  }}>
-                    <Ionicons name="close" size={18} color={theme.colors.muted} />
-                  </ScalePress>
+            {/* Poids — même pattern que l'onglet Progrès */}
+            <View style={{
+              backgroundColor: theme.colors.card,
+              borderRadius: theme.radius.md,
+              borderWidth: 1,
+              borderColor: currentPR != null ? theme.colors.amberDeep : theme.colors.border,
+              marginBottom: theme.spacing.xl,
+              overflow: "hidden",
+            }}>
+              <Pressable
+                onPress={() => {
+                  if (weightEditing) {
+                    setWeightEditing(false);
+                    setWeightInput("");
+                  } else {
+                    setWeightInput(currentPR != null ? String(currentPR) : "");
+                    setWeightEditing(true);
+                  }
+                }}
+                style={{ flexDirection: "row", alignItems: "center", padding: 14, gap: 12 }}
+              >
+                <Ionicons name="barbell-outline" size={18} color={currentPR != null ? theme.colors.amber : theme.colors.muted} />
+                <View style={{ flex: 1 }}>
+                  {currentPR != null ? (
+                    <Text style={{
+                      color: theme.colors.amber, fontSize: 17, fontWeight: "900",
+                      shadowColor: theme.colors.amber, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 8,
+                    }}>
+                      {currentPR} kg
+                    </Text>
+                  ) : (
+                    <Text style={{ color: theme.colors.muted, fontSize: 14 }}>Ajouter un poids</Text>
+                  )}
                 </View>
-              ) : (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <Ionicons name="barbell-outline" size={20} color={currentPR != null ? theme.colors.amber : theme.colors.muted} />
-                  <View style={{ flex: 1 }}>
-                    {currentPR != null ? (
-                      <>
-                        <Text style={{ color: theme.colors.amber, fontSize: 18, fontWeight: "900" }}>
-                          {currentPR} kg
-                        </Text>
-                        <Text style={{ color: theme.colors.amberDim, fontSize: 11, marginTop: 1 }}>
-                          {t.session_weight_hint}
-                        </Text>
-                      </>
-                    ) : (
-                      <Text style={{ color: theme.colors.muted, fontSize: 14, fontWeight: "600" }}>
-                        Ajouter un poids
-                      </Text>
+                <Ionicons
+                  name={weightEditing ? "chevron-up" : currentPR != null ? "create-outline" : "add-circle-outline"}
+                  size={20}
+                  color={theme.colors.amber}
+                />
+              </Pressable>
+
+              {weightEditing && (
+                <View style={{ paddingHorizontal: 14, paddingBottom: 14 }}>
+                  <View style={{ flexDirection: "row", gap: 8 }}>
+                    <TextInput
+                      value={weightInput}
+                      onChangeText={setWeightInput}
+                      placeholder={currentPR != null ? `${currentPR} kg` : t.weight_placeholder}
+                      placeholderTextColor={theme.colors.muted}
+                      keyboardType="decimal-pad"
+                      returnKeyType="done"
+                      autoFocus
+                      onSubmitEditing={saveWeight}
+                      style={{
+                        flex: 1,
+                        backgroundColor: theme.colors.cardElevated,
+                        borderRadius: theme.radius.sm,
+                        paddingHorizontal: 12,
+                        paddingVertical: 10,
+                        color: theme.colors.text,
+                        fontSize: 15, fontWeight: "700",
+                        borderWidth: 1,
+                        borderColor: theme.colors.amberDim,
+                      }}
+                    />
+                    <ScalePress
+                      onPress={saveWeight}
+                      wrapperStyle={{ alignSelf: "stretch" }}
+                      style={{ backgroundColor: theme.colors.amber, borderRadius: theme.radius.sm, paddingHorizontal: 16, flex: 1, justifyContent: "center" }}
+                    >
+                      <Text style={{ color: "#0D0D0D", fontWeight: "800", fontSize: 13 }}>{t.save}</Text>
+                    </ScalePress>
+                    {currentPR != null && (
+                      <ScalePress
+                        onPress={clearWeight}
+                        wrapperStyle={{ alignSelf: "stretch" }}
+                        style={{ backgroundColor: theme.colors.cardElevated, borderRadius: theme.radius.sm, borderWidth: 1, borderColor: theme.colors.amberDeep, paddingHorizontal: 12, flex: 1, justifyContent: "center" }}
+                      >
+                        <Ionicons name="close-circle-outline" size={16} color="#EF4444" />
+                      </ScalePress>
                     )}
                   </View>
-                  <Ionicons name="create-outline" size={16} color={currentPR != null ? theme.colors.amber : theme.colors.muted} />
                 </View>
               )}
-            </Pressable>
+            </View>
 
             {/* Carte technique — masquée si ni conseil ni technique */}
             {(exCue(currentExercise) || exTechnique(currentExercise)) ? (
