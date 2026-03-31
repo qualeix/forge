@@ -289,8 +289,6 @@ export default function SessionScreen() {
       Vibration.vibrate([0, 500, 200, 500]);
 
       doneTimeoutRef.current = setTimeout(() => {
-        // Dismiss la notification de fin de repos
-        Notifications.dismissAllNotificationsAsync().catch(() => {});
         restNotifIdRef.current = null;
         advanceAfterRest();
         setIsResting(false);
