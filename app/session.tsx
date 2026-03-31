@@ -288,6 +288,12 @@ export default function SessionScreen() {
       setTimerDone(true);
       Vibration.vibrate([0, 500, 200, 500]);
 
+      // App au premier plan : l'utilisateur voit le timer → annuler la notif planifiée
+      if (AppState.currentState === "active" && restNotifIdRef.current) {
+        Notifications.cancelScheduledNotificationAsync(restNotifIdRef.current).catch(() => {});
+        restNotifIdRef.current = null;
+      }
+
       doneTimeoutRef.current = setTimeout(() => {
         restNotifIdRef.current = null;
         advanceAfterRest();
