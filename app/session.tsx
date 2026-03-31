@@ -9,6 +9,8 @@ import {
   Vibration,
   BackHandler,
 } from "react-native";
+import { SortableList } from "../components/SortableList";
+import { ScalePress } from "../components/ScalePress";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,29 +19,6 @@ import { theme } from "../constants/theme";
 import { useSettings } from "../constants/SettingsContext";
 import { useProgram } from "../constants/ProgramContext";
 
-// Bouton animé réutilisable
-function ScalePress({
-  onPress,
-  children,
-  style,
-}: {
-  onPress?: () => void;
-  children: React.ReactNode;
-  style?: object;
-}) {
-  const scale = useRef(new Animated.Value(1)).current;
-  const pressIn = () =>
-    Animated.spring(scale, { toValue: 0.95, useNativeDriver: true, tension: 220, friction: 7 }).start();
-  const pressOut = () =>
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true, tension: 220, friction: 7 }).start();
-  return (
-    <Animated.View style={[{ transform: [{ scale }] }, style]}>
-      <Pressable onPressIn={pressIn} onPressOut={pressOut} onPress={onPress}>
-        {children}
-      </Pressable>
-    </Animated.View>
-  );
-}
 
 export default function SessionScreen() {
   const router = useRouter();
@@ -97,15 +76,17 @@ export default function SessionScreen() {
   const isLastSet = currentSet === totalSets;
   const isLastExercise = completedCount === exercises.length - 1 && !completedIds.has(currentExerciseId);
 
-  // Remettre un exercice non terminé à une autre position
-  const moveSessionExercise = (absIndex: number, direction: "up" | "down") => {
-    const toIndex = direction === "up" ? absIndex - 1 : absIndex + 1;
-    if (toIndex < 0 || toIndex >= exercises.length) return;
-    if (completedIds.has(exercises[absIndex]?.id) || completedIds.has(exercises[toIndex]?.id)) return;
+  // Réordonner les exercices restants via le drag
+  const reorderSessionExercises = (newIds: string[]) => {
     setSessionExercises((prev: any[]) => {
-      const next = [...prev];
-      [next[absIndex], next[toIndex]] = [next[toIndex], next[absIndex]];
-      return next;
+      const result = [...prev];
+      const slots = prev.reduce<number[]>((acc, e, i) => {
+        if (e.id !== currentExerciseId && !completedIds.has(e.id)) acc.push(i);
+        return acc;
+      }, []);
+      const idToEx = Object.fromEntries(prev.map((e: any) => [e.id, e]));
+      slots.forEach((slotIdx, j) => { result[slotIdx] = idToEx[newIds[j]]; });
+      return result;
     });
   };
 
@@ -370,12 +351,12 @@ export default function SessionScreen() {
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg, alignItems: "center", justifyContent: "center" }}>
         <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700", marginBottom: 8 }}>{t.session_rest_day_title}</Text>
         <Text style={{ color: theme.colors.muted, fontSize: 14, marginBottom: 32 }}>{t.session_no_session}</Text>
-        <Pressable
+        <ScalePress
           onPress={goHome}
           style={{ backgroundColor: theme.colors.card, borderRadius: theme.radius.md, paddingHorizontal: 24, paddingVertical: 12 }}
         >
           <Text style={{ color: theme.colors.amber, fontWeight: "700" }}>{t.session_go_back}</Text>
-        </Pressable>
+        </ScalePress>
       </SafeAreaView>
     );
   }
@@ -422,9 +403,9 @@ export default function SessionScreen() {
         paddingHorizontal: theme.spacing.lg,
         paddingVertical: theme.spacing.md,
       }}>
-        <Pressable onPress={() => setShowExitModal(true)}>
+        <ScalePress onPress={() => setShowExitModal(true)}>
           <Ionicons name="close" size={24} color={theme.colors.muted} />
-        </Pressable>
+        </ScalePress>
         <Text style={{ color: theme.colors.text, fontSize: 13, fontWeight: "700", letterSpacing: 1.5 }}>
           {workoutName.toUpperCase()}
         </Text>
@@ -640,9 +621,14 @@ export default function SessionScreen() {
             {/* À Suivre — exercices restants avec réorganisation */}
             {remainingExercises.length > 0 && (
               <View>
-                <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
-                  {t.session_coming_up}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
+                  <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>
+                    {t.session_coming_up}
+                  </Text>
+                  <Text style={{ color: theme.colors.muted, fontSize: 10, fontStyle: "italic" }}>
+                    (Appuyez sur un exercice pour remplacer celui en cours)
+                  </Text>
+                </View>
                 <View style={{
                   backgroundColor: theme.colors.card,
                   borderRadius: theme.radius.lg,
@@ -650,53 +636,41 @@ export default function SessionScreen() {
                   borderColor: theme.colors.border,
                   overflow: "hidden",
                 }}>
-                  {remainingExercises.map((ex: any, i: number) => {
-                    const absIndex = exercises.findIndex((e: any) => e.id === ex.id);
-                    const canMoveUp = absIndex > 0 && !completedIds.has(exercises[absIndex - 1]?.id);
-                    const canMoveDown = absIndex < exercises.length - 1 && !completedIds.has(exercises[absIndex + 1]?.id);
-                    return (
-                      <View key={ex.id}>
-                        {i > 0 && <View style={{ height: 1, backgroundColor: theme.colors.border, marginHorizontal: 16 }} />}
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12, paddingLeft: 14, paddingRight: 8 }}>
-                          <Text style={{ color: theme.colors.amberDim, fontSize: 11, fontWeight: "700", width: 24 }}>
-                            {String(absIndex + 1).padStart(2, "0")}
+                  <SortableList
+                    data={remainingExercises}
+                    onReorder={reorderSessionExercises}
+                    renderRow={(ex: any, handle) => (
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12, paddingLeft: 10, paddingRight: 8 }}>
+                        {handle}
+                        <Pressable
+                          onPress={() => {
+                            setSessionExercises((prev: any[]) => {
+                              const next = [...prev];
+                              const curIdx = next.findIndex((e: any) => e.id === currentExerciseId);
+                              const tgtIdx = next.findIndex((e: any) => e.id === ex.id);
+                              if (curIdx >= 0 && tgtIdx >= 0) {
+                                [next[curIdx], next[tgtIdx]] = [next[tgtIdx], next[curIdx]];
+                              }
+                              return next;
+                            });
+                            setCurrentExerciseId(ex.id);
+                            setExpandedCue(false);
+                            expandAnim.setValue(0);
+                            chevronAnim.setValue(0);
+                            animateIn();
+                          }}
+                          style={{ flex: 1 }}
+                        >
+                          <Text style={{ color: theme.colors.textSecondary, fontSize: 14, fontWeight: "600" }}>
+                            {exName(ex)}
                           </Text>
-                          <Pressable
-                            onPress={() => {
-                              setSessionExercises((prev: any[]) => {
-                                const next = [...prev];
-                                const curIdx = next.findIndex((e: any) => e.id === currentExerciseId);
-                                const tgtIdx = next.findIndex((e: any) => e.id === ex.id);
-                                if (curIdx >= 0 && tgtIdx >= 0) {
-                                  [next[curIdx], next[tgtIdx]] = [next[tgtIdx], next[curIdx]];
-                                }
-                                return next;
-                              });
-                              setCurrentExerciseId(ex.id);
-                              setExpandedCue(false);
-                              expandAnim.setValue(0);
-                              chevronAnim.setValue(0);
-                              animateIn();
-                            }}
-                            style={{ flex: 1 }}
-                          >
-                            <Text style={{ color: theme.colors.textSecondary, fontSize: 14, fontWeight: "600" }}>
-                              {exName(ex)}
-                            </Text>
-                          </Pressable>
-                          <Text style={{ color: theme.colors.muted, fontSize: 11, marginRight: 4 }}>
-                            {ex.sets}×{ex.reps}
-                          </Text>
-                          <Pressable onPress={() => moveSessionExercise(absIndex, "up")} hitSlop={6} style={{ opacity: canMoveUp ? 1 : 0.2, padding: 4 }} disabled={!canMoveUp}>
-                            <Ionicons name="chevron-up" size={16} color={theme.colors.amber} />
-                          </Pressable>
-                          <Pressable onPress={() => moveSessionExercise(absIndex, "down")} hitSlop={6} style={{ opacity: canMoveDown ? 1 : 0.2, padding: 4 }} disabled={!canMoveDown}>
-                            <Ionicons name="chevron-down" size={16} color={theme.colors.amber} />
-                          </Pressable>
-                        </View>
+                        </Pressable>
+                        <Text style={{ color: theme.colors.muted, fontSize: 11, marginRight: 4 }}>
+                          {ex.sets}×{ex.reps}
+                        </Text>
                       </View>
-                    );
-                  })}
+                    )}
+                  />
                 </View>
               </View>
             )}

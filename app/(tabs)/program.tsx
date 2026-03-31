@@ -1,4 +1,6 @@
-import { View, Text, ScrollView, Pressable, Modal, Animated, TextInput } from "react-native";
+import { View, Text, ScrollView, Pressable, Modal, Animated, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import { SortableList } from "../../components/SortableList";
+import { ScalePress } from "../../components/ScalePress";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useRef, useEffect } from "react";
@@ -63,14 +65,6 @@ export default function ProgramScreen() {
     setExpandedWorkout(opening ? key : null);
   };
 
-  const moveExercise = (workoutKey: string, fromIndex: number, direction: "up" | "down") => {
-    const exs = exercises[workoutKey] ?? [];
-    const toIndex = direction === "up" ? fromIndex - 1 : fromIndex + 1;
-    if (toIndex < 0 || toIndex >= exs.length) return;
-    const ids = exs.map((e) => e.id);
-    [ids[fromIndex], ids[toIndex]] = [ids[toIndex], ids[fromIndex]];
-    reorderExercises(workoutKey, ids);
-  };
 
   // Animations d'entrée décalées
   const anims = useRef([0, 1, 2].map(() => new Animated.Value(0))).current;
@@ -81,7 +75,7 @@ export default function ProgramScreen() {
   }, []);
   const animStyle = (i: number) => ({
     opacity: anims[Math.min(i, anims.length - 1)],
-    transform: [{ translateY: anims[Math.min(i, anims.length - 1)].interpolate({ inputRange: [0, 1], outputRange: [22, 0] }) }],
+    transform: [{ translateY: anims[Math.min(i, anims.length - 1)].interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
   });
 
   const gymDays = WEEK_DISPLAY_ORDER.filter((d) => schedule[d] !== null).length;
@@ -173,7 +167,7 @@ export default function ProgramScreen() {
               return (
                 <View key={dayIndex}>
                   {i > 0 && <View style={{ height: 1, backgroundColor: theme.colors.border, marginHorizontal: 16 }} />}
-                  <Pressable
+                  <ScalePress
                     onPress={() => setAssignModal(dayIndex)}
                     style={{
                       flexDirection: "row", alignItems: "center", padding: 16, gap: 12,
@@ -206,7 +200,7 @@ export default function ProgramScreen() {
                       </View>
                     )}
                     <Ionicons name="chevron-forward" size={16} color={theme.colors.muted} />
-                  </Pressable>
+                  </ScalePress>
                 </View>
               );
             })}
@@ -258,7 +252,7 @@ export default function ProgramScreen() {
                     </Text>
                   </View>
                   {/* Renommer */}
-                  <Pressable
+                  <ScalePress
                     onPress={(e) => {
                       e.stopPropagation();
                       setRenameName(workout.name_fr || workout.name);
@@ -269,9 +263,9 @@ export default function ProgramScreen() {
                     style={{ padding: 4, marginRight: 4 }}
                   >
                     <Ionicons name="create-outline" size={16} color={theme.colors.muted} />
-                  </Pressable>
+                  </ScalePress>
                   {/* Supprimer */}
-                  <Pressable
+                  <ScalePress
                     onPress={(e) => {
                       e.stopPropagation();
                       setDeleteModal(workoutKey);
@@ -280,7 +274,7 @@ export default function ProgramScreen() {
                     style={{ padding: 4, marginRight: 4 }}
                   >
                     <Ionicons name="trash-outline" size={16} color={theme.colors.muted} />
-                  </Pressable>
+                  </ScalePress>
                   <Animated.View style={{
                     transform: [{ rotate: expandAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] }) }],
                   }}>
@@ -301,36 +295,30 @@ export default function ProgramScreen() {
                     </View>
                   )}
 
-                  {exs.map((ex, i) => (
-                    <View key={ex.id}>
-                      {i > 0 && <View style={{ height: 1, backgroundColor: theme.colors.border, marginHorizontal: 16 }} />}
-                      <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 12, paddingHorizontal: 16, gap: 8 }}>
-                        <Text style={{ color: theme.colors.amberDim, fontSize: 11, fontWeight: "700", width: 22 }}>
-                          {String(i + 1).padStart(2, "0")}
+                  <SortableList
+                    data={exs}
+                    onReorder={(ids) => reorderExercises(workoutKey, ids)}
+                    renderRow={(ex, handle) => (
+                      <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 12, paddingHorizontal: 12, gap: 8 }}>
+                        {handle}
+                        <Text style={{ color: theme.colors.text, fontSize: 13, fontWeight: "600", flex: 1 }}>
+                          {getExName(ex)}
                         </Text>
-                        <Pressable onPress={() => openExerciseModal(workoutKey, ex)} style={{ flex: 1 }}>
-                          <Text style={{ color: theme.colors.text, fontSize: 13, fontWeight: "600" }}>
-                            {getExName(ex)}
-                          </Text>
-                        </Pressable>
                         <Text style={{ color: theme.colors.muted, fontSize: 11, marginRight: 4 }}>
                           {ex.sets}×{ex.reps}
                         </Text>
-                        <Pressable onPress={() => moveExercise(workoutKey, i, "up")} hitSlop={8} style={{ opacity: i === 0 ? 0.2 : 1 }} disabled={i === 0}>
-                          <Ionicons name="chevron-up" size={18} color={theme.colors.amber} />
-                        </Pressable>
-                        <Pressable onPress={() => moveExercise(workoutKey, i, "down")} hitSlop={8} style={{ opacity: i === exs.length - 1 ? 0.2 : 1 }} disabled={i === exs.length - 1}>
-                          <Ionicons name="chevron-down" size={18} color={theme.colors.amber} />
-                        </Pressable>
-                        <Pressable onPress={() => removeExercise(workoutKey, ex.id)} hitSlop={8} style={{ padding: 2 }}>
+                        <ScalePress onPress={() => openExerciseModal(workoutKey, ex)} hitSlop={8} style={{ padding: 2 }}>
+                          <Ionicons name="create-outline" size={16} color={theme.colors.amber} />
+                        </ScalePress>
+                        <ScalePress onPress={() => removeExercise(workoutKey, ex.id)} hitSlop={8} style={{ padding: 2 }}>
                           <Ionicons name="close-circle-outline" size={16} color={theme.colors.muted} />
-                        </Pressable>
+                        </ScalePress>
                       </View>
-                    </View>
-                  ))}
+                    )}
+                  />
 
                   {/* Bouton ajouter exercice */}
-                  <Pressable
+                  <ScalePress
                     onPress={() => openExerciseModal(workoutKey, null)}
                     style={{
                       flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
@@ -341,14 +329,14 @@ export default function ProgramScreen() {
                     <Text style={{ color: theme.colors.amber, fontSize: 12, fontWeight: "700" }}>
                       {t.program_add_exercise}
                     </Text>
-                  </Pressable>
+                  </ScalePress>
                 </Animated.View>
               </View>
             );
           })}
 
           {/* Bouton nouvelle séance */}
-          <Pressable
+          <ScalePress
             onPress={() => { setCreateName(""); setShowCreateModal(true); }}
             style={{
               backgroundColor: theme.colors.card,
@@ -367,7 +355,7 @@ export default function ProgramScreen() {
             <Text style={{ color: theme.colors.amber, fontSize: 14, fontWeight: "700" }}>
               {t.program_new_workout}
             </Text>
-          </Pressable>
+          </ScalePress>
         </Animated.View>
       </ScrollView>
 
@@ -385,16 +373,16 @@ export default function ProgramScreen() {
                   {t.program_assign_title}
                 </Text>
               </View>
-              <Pressable onPress={() => setAssignModal(null)} hitSlop={8} style={{ padding: 4 }}>
+              <ScalePress onPress={() => setAssignModal(null)} hitSlop={8} style={{ padding: 4 }}>
                 <Ionicons name="close" size={22} color={theme.colors.muted} />
-              </Pressable>
+              </ScalePress>
             </View>
             <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
               <View style={{ gap: 8 }}>
                 {assignableWorkouts.map((w) => {
                   const isSelected = assignModal !== null && schedule[assignModal] === w.key;
                   return (
-                    <Pressable
+                    <ScalePress
                       key={w.key}
                       onPress={() => { if (assignModal !== null) setDayWorkout(assignModal, w.key); setAssignModal(null); }}
                       style={{
@@ -409,11 +397,11 @@ export default function ProgramScreen() {
                         {getWorkoutDisplayName(w.key)}
                       </Text>
                       {isSelected && <Ionicons name="checkmark-circle" size={18} color={theme.colors.amber} />}
-                    </Pressable>
+                    </ScalePress>
                   );
                 })}
                 {/* Option repos */}
-                <Pressable
+                <ScalePress
                   onPress={() => { if (assignModal !== null) setDayWorkout(assignModal, null); setAssignModal(null); }}
                   style={{
                     flexDirection: "row", alignItems: "center",
@@ -427,7 +415,7 @@ export default function ProgramScreen() {
                     {t.program_set_rest}
                   </Text>
                   {assignModal !== null && schedule[assignModal] === null && <Ionicons name="checkmark-circle" size={18} color={theme.colors.amber} />}
-                </Pressable>
+                </ScalePress>
               </View>
             </ScrollView>
           </Pressable>
@@ -436,15 +424,16 @@ export default function ProgramScreen() {
 
       {/* Modal — Renommer la séance */}
       <Modal visible={renameModal !== null} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setRenameModal(null)}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "padding"} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)" }}>
         <Pressable onPress={() => setRenameModal(null)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)", alignItems: "center", justifyContent: "center", padding: theme.spacing.lg }}>
           <Pressable onPress={(e) => e.stopPropagation()} style={{ backgroundColor: theme.colors.card, borderRadius: theme.radius.xl, borderWidth: 1, borderColor: theme.colors.border, padding: theme.spacing.xl, width: "100%" }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
               <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: "900", flex: 1 }}>
                 {t.program_rename}
               </Text>
-              <Pressable onPress={() => setRenameModal(null)} hitSlop={8} style={{ padding: 4 }}>
+              <ScalePress onPress={() => setRenameModal(null)} hitSlop={8} style={{ padding: 4 }}>
                 <Ionicons name="close" size={22} color={theme.colors.muted} />
-              </Pressable>
+              </ScalePress>
             </View>
             <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>
               {t.program_name_placeholder}
@@ -473,7 +462,7 @@ export default function ProgramScreen() {
                 paddingHorizontal: 16, paddingVertical: 12, color: theme.colors.text, fontSize: 16, fontWeight: "700", marginBottom: 16,
               }}
             />
-            <Pressable
+            <ScalePress
               onPress={() => {
                 if (renameModal && renameName.trim()) {
                   updateWorkout(renameModal, {
@@ -487,22 +476,24 @@ export default function ProgramScreen() {
               style={{ backgroundColor: theme.colors.amber, borderRadius: theme.radius.md, paddingVertical: 14, alignItems: "center" }}
             >
               <Text style={{ color: "#0D0D0D", fontWeight: "900", fontSize: 15 }}>{t.program_rename_save}</Text>
-            </Pressable>
+            </ScalePress>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Modal — Créer une séance */}
       <Modal visible={showCreateModal} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setShowCreateModal(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "padding"} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)" }}>
         <Pressable onPress={() => setShowCreateModal(false)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)", alignItems: "center", justifyContent: "center", padding: theme.spacing.lg }}>
           <Pressable onPress={(e) => e.stopPropagation()} style={{ backgroundColor: theme.colors.card, borderRadius: theme.radius.xl, borderWidth: 1, borderColor: theme.colors.border, padding: theme.spacing.xl, width: "100%" }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
               <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: "900", flex: 1 }}>
                 {t.program_new_workout}
               </Text>
-              <Pressable onPress={() => setShowCreateModal(false)} hitSlop={8} style={{ padding: 4 }}>
+              <ScalePress onPress={() => setShowCreateModal(false)} hitSlop={8} style={{ padding: 4 }}>
                 <Ionicons name="close" size={22} color={theme.colors.muted} />
-              </Pressable>
+              </ScalePress>
             </View>
             <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>
               {t.program_name_placeholder}
@@ -518,7 +509,7 @@ export default function ProgramScreen() {
                 paddingHorizontal: 16, paddingVertical: 12, color: theme.colors.text, fontSize: 16, fontWeight: "700", marginBottom: 16,
               }}
             />
-            <Pressable
+            <ScalePress
               onPress={async () => {
                 if (createName.trim()) {
                   await createWorkout(createName.trim(), createName.trim());
@@ -528,9 +519,10 @@ export default function ProgramScreen() {
               style={{ backgroundColor: theme.colors.amber, borderRadius: theme.radius.md, paddingVertical: 14, alignItems: "center" }}
             >
               <Text style={{ color: "#0D0D0D", fontWeight: "900", fontSize: 15 }}>{t.program_create}</Text>
-            </Pressable>
+            </ScalePress>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Modal — Confirmation suppression */}
@@ -544,7 +536,7 @@ export default function ProgramScreen() {
               {deleteModal ? getWorkoutDisplayName(deleteModal) : ""}{"\n\n"}{t.program_delete_confirm}
             </Text>
             <View style={{ gap: 10 }}>
-              <Pressable
+              <ScalePress
                 onPress={async () => {
                   if (deleteModal) await deleteWorkout(deleteModal);
                   if (expandedWorkout === deleteModal) setExpandedWorkout(null);
@@ -553,13 +545,13 @@ export default function ProgramScreen() {
                 style={{ backgroundColor: "#7F1D1D", borderRadius: theme.radius.md, paddingVertical: 14, alignItems: "center" }}
               >
                 <Text style={{ color: "#FCA5A5", fontWeight: "900", fontSize: 15 }}>{t.program_delete}</Text>
-              </Pressable>
-              <Pressable
+              </ScalePress>
+              <ScalePress
                 onPress={() => setDeleteModal(null)}
                 style={{ backgroundColor: theme.colors.cardElevated, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, paddingVertical: 14, alignItems: "center" }}
               >
                 <Text style={{ color: theme.colors.textSecondary, fontWeight: "600", fontSize: 14 }}>{t.program_cancel}</Text>
-              </Pressable>
+              </ScalePress>
             </View>
           </Pressable>
         </Pressable>
@@ -567,17 +559,18 @@ export default function ProgramScreen() {
 
       {/* Modal — Ajouter / Modifier un exercice */}
       <Modal visible={exerciseModal !== null} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setExerciseModal(null)}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "padding"} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)" }}>
         <Pressable onPress={() => setExerciseModal(null)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)", alignItems: "center", justifyContent: "center", padding: theme.spacing.lg }}>
           <Pressable onPress={(e) => e.stopPropagation()} style={{ backgroundColor: theme.colors.card, borderRadius: theme.radius.xl, borderWidth: 1, borderColor: theme.colors.border, padding: theme.spacing.xl, width: "100%", maxHeight: "85%" }}>
-            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingRight: 2 }}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingRight: 2 }} keyboardDismissMode="on-drag">
               {/* En-tête avec croix */}
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                 <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: "900", flex: 1 }}>
                   {exerciseModal?.exercise ? t.program_edit_exercise : t.program_add_exercise}
                 </Text>
-                <Pressable onPress={() => setExerciseModal(null)} hitSlop={8} style={{ padding: 4 }}>
+                <ScalePress onPress={() => setExerciseModal(null)} hitSlop={8} style={{ padding: 4 }}>
                   <Ionicons name="close" size={22} color={theme.colors.muted} />
-                </Pressable>
+                </ScalePress>
               </View>
 
               <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{t.program_exercise_name}</Text>
@@ -647,17 +640,18 @@ export default function ProgramScreen() {
                 }}
               />
 
-              <Pressable
+              <ScalePress
                 onPress={saveExercise}
                 style={{ backgroundColor: theme.colors.amber, borderRadius: theme.radius.md, paddingVertical: 14, alignItems: "center" }}
               >
                 <Text style={{ color: "#0D0D0D", fontWeight: "900", fontSize: 15 }}>
                   {exerciseModal?.exercise ? t.program_save : t.program_add}
                 </Text>
-              </Pressable>
+              </ScalePress>
             </ScrollView>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

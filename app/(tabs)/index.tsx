@@ -63,7 +63,7 @@ export default function TodayScreen() {
 
   const animStyle = (i: number) => ({
     opacity: anims[i],
-    transform: [{ translateY: anims[i].interpolate({ inputRange: [0, 1], outputRange: [22, 0] }) }],
+    transform: [{ translateY: anims[i].interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
   });
 
   return (

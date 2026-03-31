@@ -17,6 +17,7 @@ import { getTodayKey, type DayKey } from "../../constants/data";
 import { useSettings } from "../../constants/SettingsContext";
 import { useMenu, type MenuMeal } from "../../constants/MenuContext";
 import { useProgram } from "../../constants/ProgramContext";
+import { ScalePress } from "../../components/ScalePress";
 
 const DAY_ORDER: DayKey[] = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
@@ -66,117 +67,104 @@ function EditMealModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent statusBarTranslucent onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1, justifyContent: "flex-end" }}
-      >
-        <View style={{
-          backgroundColor: theme.colors.card,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          padding: 20,
-          paddingBottom: 36,
-          borderTopWidth: 1,
-          borderColor: theme.colors.border,
-        }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "800" }}>
-              {meal ? t.meals_edit_meal : t.meals_add_meal_title}
-            </Text>
-            <Pressable onPress={onClose} style={{ padding: 4 }}>
-              <Ionicons name="close" size={22} color={theme.colors.muted} />
-            </Pressable>
-          </View>
+    <Modal visible={visible} animationType="fade" transparent statusBarTranslucent onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "padding"} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)" }}>
+      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)", alignItems: "center", justifyContent: "center", padding: theme.spacing.lg }}>
+        <Pressable onPress={(e) => e.stopPropagation()} style={{ backgroundColor: theme.colors.card, borderRadius: theme.radius.xl, borderWidth: 1, borderColor: theme.colors.border, padding: theme.spacing.xl, width: "100%", maxHeight: "85%" }}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingRight: 2 }} keyboardDismissMode="on-drag">
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: "900", flex: 1 }}>
+                {meal ? t.meals_edit_meal : t.meals_add_meal_title}
+              </Text>
+              <ScalePress onPress={onClose} hitSlop={8} style={{ padding: 4 }}>
+                <Ionicons name="close" size={22} color={theme.colors.muted} />
+              </ScalePress>
+            </View>
 
-          <Text style={{ color: theme.colors.textSecondary, fontSize: 12, marginBottom: 6 }}>{t.meals_meal_name}</Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder={t.meals_meal_name}
-            placeholderTextColor={theme.colors.muted}
-            style={{
-              backgroundColor: theme.colors.cardElevated,
-              color: theme.colors.text,
-              borderRadius: theme.radius.md,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              padding: 12,
-              fontSize: 14,
-              marginBottom: 12,
-            }}
-          />
-
-          <Text style={{ color: theme.colors.textSecondary, fontSize: 12, marginBottom: 6 }}>{t.meals_meal_time}</Text>
-          <TextInput
-            value={time}
-            onChangeText={handleTimeChange}
-            placeholder="08:30"
-            placeholderTextColor={theme.colors.muted}
-            keyboardType="number-pad"
-            maxLength={5}
-            style={{
-              backgroundColor: theme.colors.cardElevated,
-              color: theme.colors.text,
-              borderRadius: theme.radius.md,
-              borderWidth: 1,
-              borderColor: time.length > 0 && !isValidTime ? "#EF4444" : theme.colors.border,
-              padding: 12,
-              fontSize: 14,
-              marginBottom: time.length > 0 && !isValidTime ? 4 : 12,
-            }}
-          />
-          {time.length > 0 && !isValidTime && (
-            <Text style={{ color: "#EF4444", fontSize: 11, marginBottom: 12 }}>Format invalide — ex: 08:30, 23:45</Text>
-          )}
-
-          <Text style={{ color: theme.colors.textSecondary, fontSize: 12, marginBottom: 6 }}>{t.meals_meal_details}</Text>
-          <TextInput
-            value={details}
-            onChangeText={setDetails}
-            placeholder={t.meals_meal_details}
-            placeholderTextColor={theme.colors.muted}
-            multiline
-            numberOfLines={3}
-            style={{
-              backgroundColor: theme.colors.cardElevated,
-              color: theme.colors.text,
-              borderRadius: theme.radius.md,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              padding: 12,
-              fontSize: 14,
-              marginBottom: 20,
-              minHeight: 72,
-              textAlignVertical: "top",
-            }}
-          />
-
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <Pressable
-              onPress={onClose}
+            <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{t.meals_meal_name}</Text>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder={t.meals_meal_name}
+              placeholderTextColor={theme.colors.muted}
               style={{
-                flex: 1, padding: 14, borderRadius: theme.radius.md,
                 backgroundColor: theme.colors.cardElevated,
-                borderWidth: 1, borderColor: theme.colors.border,
-                alignItems: "center",
+                color: theme.colors.text,
+                borderRadius: theme.radius.md,
+                borderWidth: 1,
+                borderColor: theme.colors.amberDim,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                fontSize: 15,
+                fontWeight: "700",
+                marginBottom: 10,
               }}
-            >
-              <Text style={{ color: theme.colors.muted, fontWeight: "700" }}>{t.program_cancel}</Text>
-            </Pressable>
-            <Pressable
+            />
+
+            <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{t.meals_meal_time}</Text>
+            <TextInput
+              value={time}
+              onChangeText={handleTimeChange}
+              placeholder="08:30"
+              placeholderTextColor={theme.colors.muted}
+              keyboardType="number-pad"
+              maxLength={5}
+              style={{
+                backgroundColor: theme.colors.cardElevated,
+                color: theme.colors.text,
+                borderRadius: theme.radius.md,
+                borderWidth: 1,
+                borderColor: time.length > 0 && !isValidTime ? "#EF4444" : theme.colors.border,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                fontSize: 15,
+                fontWeight: "700",
+                marginBottom: time.length > 0 && !isValidTime ? 4 : 10,
+              }}
+            />
+            {time.length > 0 && !isValidTime && (
+              <Text style={{ color: "#EF4444", fontSize: 11, marginBottom: 10 }}>Format invalide — ex: 08:30, 23:45</Text>
+            )}
+
+            <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{t.meals_meal_details}</Text>
+            <TextInput
+              value={details}
+              onChangeText={setDetails}
+              placeholder={t.meals_meal_details}
+              placeholderTextColor={theme.colors.muted}
+              multiline
+              numberOfLines={3}
+              style={{
+                backgroundColor: theme.colors.cardElevated,
+                color: theme.colors.text,
+                borderRadius: theme.radius.md,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                fontSize: 14,
+                marginBottom: 16,
+                minHeight: 72,
+                textAlignVertical: "top",
+              }}
+            />
+
+            <ScalePress
               onPress={() => canSave && onSave({ name: name.trim(), time: time.trim(), details: details.trim() })}
               style={{
-                flex: 1, padding: 14, borderRadius: theme.radius.md,
                 backgroundColor: canSave ? theme.colors.amber : theme.colors.cardElevated,
-                borderWidth: 1, borderColor: canSave ? theme.colors.amber : theme.colors.border,
+                borderRadius: theme.radius.md,
+                borderWidth: 1,
+                borderColor: canSave ? theme.colors.amber : theme.colors.border,
+                paddingVertical: 14,
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: canSave ? "#000" : theme.colors.muted, fontWeight: "800" }}>{t.save}</Text>
-            </Pressable>
-          </View>
-        </View>
+              <Text style={{ color: canSave ? "#0D0D0D" : theme.colors.muted, fontWeight: "900", fontSize: 15 }}>{t.save}</Text>
+            </ScalePress>
+          </ScrollView>
+        </Pressable>
+      </Pressable>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -271,16 +259,16 @@ function ExpandableDay({ dayKey, isToday }: { dayKey: DayKey; isToday: boolean }
                     )}
                   </View>
                   <Text style={{ color: theme.colors.amber, fontWeight: "800", fontSize: 13, marginRight: 4 }}>{meal.time}</Text>
-                  <Pressable onPress={() => setEditingMeal(meal)} hitSlop={6} style={{ padding: 6 }}>
+                  <ScalePress onPress={() => setEditingMeal(meal)} hitSlop={6} style={{ padding: 6 }}>
                     <Ionicons name="create-outline" size={17} color={theme.colors.muted} />
-                  </Pressable>
-                  <Pressable onPress={() => deleteMeal(meal.id, dayKey)} hitSlop={6} style={{ padding: 6 }}>
+                  </ScalePress>
+                  <ScalePress onPress={() => deleteMeal(meal.id, dayKey)} hitSlop={6} style={{ padding: 6 }}>
                     <Ionicons name="close-circle-outline" size={17} color={theme.colors.muted} />
-                  </Pressable>
+                  </ScalePress>
                 </View>
               </View>
             ))}
-            <Pressable
+            <ScalePress
               onPress={() => setEditingMeal("new")}
               style={{
                 flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
@@ -289,7 +277,7 @@ function ExpandableDay({ dayKey, isToday }: { dayKey: DayKey; isToday: boolean }
             >
               <Ionicons name="add-circle-outline" size={16} color={theme.colors.amber} />
               <Text style={{ color: theme.colors.amber, fontSize: 12, fontWeight: "700" }}>{t.meals_add_meal_btn}</Text>
-            </Pressable>
+            </ScalePress>
           </View>
         </View>
       </Animated.View>
@@ -336,9 +324,9 @@ function WeeklyMenuModal({ visible, onClose }: { visible: boolean; onClose: () =
               {t.weekly_menu}
             </Text>
           </View>
-          <Pressable onPress={onClose} style={{ padding: 8 }}>
+          <ScalePress onPress={onClose} style={{ padding: 8 }}>
             <Ionicons name="close" size={24} color={theme.colors.muted} />
-          </Pressable>
+          </ScalePress>
         </View>
 
         <ScrollView
@@ -371,7 +359,7 @@ export default function MealsScreen() {
   }, []);
   const animStyle = (i: number) => ({
     opacity: anims[i],
-    transform: [{ translateY: anims[i].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
+    transform: [{ translateY: anims[i].interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
   });
 
   const parseTime = (time: string) => {
@@ -440,7 +428,7 @@ export default function MealsScreen() {
 
         {/* Bouton menu de la semaine */}
         <Animated.View style={[{ marginTop: theme.spacing.xl }, animStyle(2)]}>
-          <Pressable
+          <ScalePress
             onPress={() => setWeeklyVisible(true)}
             style={{
               backgroundColor: theme.colors.card,
@@ -469,7 +457,7 @@ export default function MealsScreen() {
               </View>
             </View>
             <Ionicons name="chevron-forward" size={18} color={theme.colors.muted} />
-          </Pressable>
+          </ScalePress>
         </Animated.View>
       </ScrollView>
     </SafeAreaView>

@@ -120,7 +120,7 @@ export const strings: AppStrings = {
   nutrition: "Nutrition",
   todays_meals: "Repas du Jour",
   weekly_menu: "Menu de la Semaine",
-  weekly_menu_sub: "Voir les 7 jours · planifier les courses",
+  weekly_menu_sub: "Voir les 7 jours",
   planning: "Planning",
   gym_day: "Séance Gym",
 

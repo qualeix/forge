@@ -12,6 +12,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { theme } from "../../constants/theme";
 import { useSettings } from "../../constants/SettingsContext";
 import { useProgram } from "../../constants/ProgramContext";
+import { ScalePress } from "../../components/ScalePress";
 
 type WeightRow = { exercise_id: string; weight: number; date: string };
 
@@ -36,7 +37,7 @@ export default function ProgressScreen() {
 
   const animStyle = (i: number) => ({
     opacity: anims[Math.min(i, anims.length - 1)],
-    transform: [{ translateY: anims[Math.min(i, anims.length - 1)].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
+    transform: [{ translateY: anims[Math.min(i, anims.length - 1)].interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
   });
 
   const today = new Date().toISOString().slice(0, 10);
@@ -151,7 +152,7 @@ export default function ProgressScreen() {
                       {i > 0 && (
                         <View style={{ height: 1, backgroundColor: theme.colors.border, marginHorizontal: 16 }} />
                       )}
-                      <Pressable
+                      <ScalePress
                         onPress={() => {
                           if (isActive) {
                             setActiveExercise(null);
@@ -190,7 +191,7 @@ export default function ProgressScreen() {
                           size={20}
                           color={isActive ? theme.colors.amber : entry ? theme.colors.amber : theme.colors.muted}
                         />
-                      </Pressable>
+                      </ScalePress>
 
                       {isActive && (
                         <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
@@ -216,31 +217,35 @@ export default function ProgressScreen() {
                                 borderColor: inputError ? theme.colors.amber : theme.colors.amberDim,
                               }}
                             />
-                            <Pressable
+                            <ScalePress
                               onPress={saveWeight}
+                              wrapperStyle={{ alignSelf: "stretch" }}
                               style={{
                                 backgroundColor: theme.colors.amber,
                                 borderRadius: theme.radius.sm,
                                 paddingHorizontal: 16,
+                                flex: 1,
                                 justifyContent: "center",
                               }}
                             >
                               <Text style={{ color: "#0D0D0D", fontWeight: "800", fontSize: 13 }}>{t.save}</Text>
-                            </Pressable>
+                            </ScalePress>
                             {entry && (
-                              <Pressable
+                              <ScalePress
                                 onPress={clearWeight}
+                                wrapperStyle={{ alignSelf: "stretch" }}
                                 style={{
                                   backgroundColor: theme.colors.cardElevated,
                                   borderRadius: theme.radius.sm,
                                   borderWidth: 1,
                                   borderColor: theme.colors.amberDeep,
                                   paddingHorizontal: 12,
+                                  flex: 1,
                                   justifyContent: "center",
                                 }}
                               >
                                 <Ionicons name="close-circle-outline" size={16} color={theme.colors.muted} />
-                              </Pressable>
+                              </ScalePress>
                             )}
                           </View>
                           {inputError && (
