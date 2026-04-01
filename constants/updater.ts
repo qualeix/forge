@@ -3,7 +3,7 @@ import * as IntentLauncher from "expo-intent-launcher";
 import { Platform } from "react-native";
 
 const UPDATE_URL = "http://107.189.21.156/forge/version.json";
-export const APP_VERSION = "1.7.8";
+export const APP_VERSION = "1.7.9";
 
 function isNewer(remote: string, current: string): boolean {
   const r = remote.split(".").map(Number);

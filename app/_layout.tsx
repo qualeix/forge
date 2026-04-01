@@ -12,7 +12,7 @@ import { MenuProvider } from "../constants/MenuContext";
 import { useSettings } from "../constants/SettingsContext";
 import { useMenu } from "../constants/MenuContext";
 import { useProgram } from "../constants/ProgramContext";
-import { setupNotificationChannel, rescheduleAll, requestIgnoreBatteryOptimizations } from "../constants/notifications";
+import { setupNotificationChannel, scheduleMealNotifications, cancelMealNotifications, scheduleWorkoutNotifications, cancelWorkoutNotifications, requestIgnoreBatteryOptimizations } from "../constants/notifications";
 
 // Affiche les notifications même quand l'app est au premier plan
 Notifications.setNotificationHandler({
@@ -136,13 +136,41 @@ function NotificationScheduler() {
   const { db } = useSettings();
   const { menuData } = useMenu();
   const { schedule, workouts, loaded: programLoaded } = useProgram();
-  const done = useRef(false);
+  const workoutsDone = useRef(false);
+  const mealsDone = useRef(false);
 
   useEffect(() => {
-    if (!db || done.current || !programLoaded || Object.keys(menuData).length === 0) return;
-    done.current = true;
-    rescheduleAll(db, menuData, Array.from({ length: 7 }, (_, i) => schedule[i] ?? null), workouts);
-  }, [db, programLoaded, menuData]);
+    if (!db || !programLoaded || workoutsDone.current) return;
+    workoutsDone.current = true;
+    db.getAllAsync<{ key: string; value: string }>(
+      "SELECT key, value FROM settings WHERE key IN ('notif_workouts_on','notif_workouts_time','notif_workouts_body')"
+    ).then((rows) => {
+      const map: Record<string, string> = {};
+      rows.forEach((r) => { map[r.key] = r.value; });
+      const sched = Array.from({ length: 7 }, (_, i) => schedule[i] ?? null);
+      if ((map["notif_workouts_on"] ?? "1") === "1") {
+        scheduleWorkoutNotifications(sched, workouts, map["notif_workouts_time"] ?? "16:15", map["notif_workouts_body"] ?? "");
+      } else {
+        cancelWorkoutNotifications();
+      }
+    }).catch(() => {});
+  }, [db, programLoaded]);
+
+  useEffect(() => {
+    if (!db || Object.keys(menuData).length === 0 || mealsDone.current) return;
+    mealsDone.current = true;
+    db.getAllAsync<{ key: string; value: string }>(
+      "SELECT key, value FROM settings WHERE key IN ('notif_meals_on','notif_meals_offset')"
+    ).then((rows) => {
+      const map: Record<string, string> = {};
+      rows.forEach((r) => { map[r.key] = r.value; });
+      if ((map["notif_meals_on"] ?? "1") === "1") {
+        scheduleMealNotifications(menuData, parseInt(map["notif_meals_offset"] ?? "60") || 60);
+      } else {
+        cancelMealNotifications();
+      }
+    }).catch(() => {});
+  }, [db, menuData]);
 
   return null;
 }

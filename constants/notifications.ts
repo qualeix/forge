@@ -151,36 +151,3 @@ export async function cancelMealNotifications() {
 export async function cancelWorkoutNotifications() {
   await cancelByType("workout");
 }
-
-export async function rescheduleAll(
-  db: any,
-  menuData: Record<string, MenuMeal[]>,
-  schedule: (string | null)[],
-  workouts: WorkoutRecord[]
-) {
-  try {
-    const rows = (await db.getAllAsync(
-      "SELECT key, value FROM settings WHERE key IN ('notif_meals_on','notif_workouts_on','notif_meals_offset','notif_workouts_time','notif_workouts_body')"
-    )) as { key: string; value: string }[];
-    const map: Record<string, string> = {};
-    rows.forEach((r) => { map[r.key] = r.value; });
-
-    const mealsOn = (map["notif_meals_on"] ?? "0") === "1";
-    const workoutsOn = (map["notif_workouts_on"] ?? "0") === "1";
-    const mealsOffset = parseInt(map["notif_meals_offset"] ?? "0") || 0;
-    const workoutsTime = map["notif_workouts_time"] ?? "08:00";
-    const workoutsBody = map["notif_workouts_body"] ?? "";
-
-    if (mealsOn) {
-      await scheduleMealNotifications(menuData, mealsOffset);
-    } else {
-      await cancelMealNotifications();
-    }
-
-    if (workoutsOn) {
-      await scheduleWorkoutNotifications(schedule, workouts, workoutsTime, workoutsBody);
-    } else {
-      await cancelWorkoutNotifications();
-    }
-  } catch {}
-}

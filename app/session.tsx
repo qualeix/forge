@@ -61,7 +61,7 @@ export default function SessionScreen() {
   const timerFiredRef = useRef(false);
   const restTypeRef = useRef<"set" | "exercise">("set");
   const restNotifIdRef = useRef<string | null>(null);
-  const notifTimerEnabledRef = useRef(false);
+  const notifTimerEnabledRef = useRef(true);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -113,7 +113,7 @@ export default function SessionScreen() {
     db.getFirstAsync<{ value: string }>(
       "SELECT value FROM settings WHERE key = 'notif_timer_on'"
     ).then((row) => {
-      notifTimerEnabledRef.current = row ? row.value === "1" : false;
+      notifTimerEnabledRef.current = !row || row.value === "1";
     }).catch(() => {});
   }, [db]);
 
