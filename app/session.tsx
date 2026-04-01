@@ -268,7 +268,7 @@ export default function SessionScreen() {
       }
       Notifications.scheduleNotificationAsync({
         content: {
-          title: "⏱ C'est reparti !",
+          title: "C'est reparti !",
           body,
           data: { type: "timer" },
           sound: true,
@@ -606,7 +606,7 @@ export default function SessionScreen() {
               {currentExercise.reps}{typeof currentExercise.reps === "number" ? t.session_reps : ""}
             </Text>
 
-            {/* Poids — même pattern que l'onglet Progrès */}
+            {/* Poids - même pattern que l'onglet Progrès */}
             <View style={{
               backgroundColor: theme.colors.card,
               borderRadius: theme.radius.md,
@@ -692,7 +692,7 @@ export default function SessionScreen() {
               )}
             </View>
 
-            {/* Carte technique — masquée si ni conseil ni technique */}
+            {/* Carte technique - masquée si ni conseil ni technique */}
             {(exCue(currentExercise) || exTechnique(currentExercise)) ? (
               <View style={{
                 backgroundColor: theme.colors.card,
@@ -731,7 +731,7 @@ export default function SessionScreen() {
               </View>
             ) : null}
 
-            {/* SÉRIE TERMINÉE — lueur + scale */}
+            {/* SÉRIE TERMINÉE - lueur + scale */}
             <Animated.View style={{
               shadowColor: theme.colors.amber,
               shadowOffset: { width: 0, height: 0 },
@@ -762,7 +762,7 @@ export default function SessionScreen() {
               </Pressable>
             </Animated.View>
 
-            {/* À Suivre — exercices restants avec réorganisation */}
+            {/* À Suivre - exercices restants avec réorganisation */}
             {remainingExercises.length > 0 && (
               <View>
                 <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>

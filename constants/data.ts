@@ -17,7 +17,7 @@ export const WORKOUT_DATA = {
         name: "Développé couché (machine)",
         sets: 4,
         reps: 8,
-        cue: "Contrôle > charge — technique d'abord, poids ensuite.",
+        cue: "Contrôle > charge, technique d'abord, poids ensuite.",
         technique:
           "Omoplates rétractées et plaquées contre le banc. Trajectoire : barre vers pectoraux inférieurs, légèrement diagonal. 3s descente, 1s pause, poussée explosive.",
       },
@@ -41,7 +41,7 @@ export const WORKOUT_DATA = {
       },
       {
         id: "triceps_pushdown",
-        name: "Extensions triceps (poulie)",
+        name: "Extensions triceps (poulies)",
         sets: 3,
         reps: 12,
         cue: "Extension complète en bas (c'est là que le triceps se contracte pleinement).",

@@ -356,7 +356,7 @@ export default function ProgramScreen() {
         </Animated.View>
       </ScrollView>
 
-      {/* Modal — Assigner un programme au jour */}
+      {/* Modal - Assigner un programme au jour */}
       <Modal visible={assignModal !== null} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setAssignModal(null)}>
         <Pressable onPress={() => setAssignModal(null)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)", alignItems: "center", justifyContent: "center", padding: theme.spacing.lg }}>
           <Pressable onPress={(e) => e.stopPropagation()} style={{ backgroundColor: theme.colors.card, borderRadius: theme.radius.xl, borderWidth: 1, borderColor: theme.colors.border, padding: theme.spacing.xl, width: "100%" }}>
@@ -419,7 +419,7 @@ export default function ProgramScreen() {
         </Pressable>
       </Modal>
 
-      {/* Modal — Renommer la séance */}
+      {/* Modal - Renommer la séance */}
       <Modal visible={renameModal !== null} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setRenameModal(null)}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "padding"} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)" }}>
         <Pressable onPress={() => setRenameModal(null)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)", alignItems: "center", justifyContent: "center", padding: theme.spacing.lg }}>
@@ -479,7 +479,7 @@ export default function ProgramScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Modal — Créer une séance */}
+      {/* Modal - Créer une séance */}
       <Modal visible={showCreateModal} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setShowCreateModal(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "padding"} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)" }}>
         <Pressable onPress={() => setShowCreateModal(false)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)", alignItems: "center", justifyContent: "center", padding: theme.spacing.lg }}>
@@ -522,7 +522,7 @@ export default function ProgramScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Modal — Confirmation suppression */}
+      {/* Modal - Confirmation suppression */}
       <Modal visible={deleteModal !== null} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setDeleteModal(null)}>
         <Pressable onPress={() => setDeleteModal(null)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)", alignItems: "center", justifyContent: "center", padding: theme.spacing.lg }}>
           <Pressable onPress={(e) => e.stopPropagation()} style={{ backgroundColor: theme.colors.card, borderRadius: theme.radius.xl, borderWidth: 1, borderColor: theme.colors.border, padding: theme.spacing.xl, width: "100%" }}>
@@ -554,7 +554,7 @@ export default function ProgramScreen() {
         </Pressable>
       </Modal>
 
-      {/* Modal — Ajouter / Modifier un exercice */}
+      {/* Modal - Ajouter / Modifier un exercice */}
       <Modal visible={exerciseModal !== null} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setExerciseModal(null)}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "padding"} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)" }}>
         <Pressable onPress={() => setExerciseModal(null)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.88)", alignItems: "center", justifyContent: "center", padding: theme.spacing.lg }}>

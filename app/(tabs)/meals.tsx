@@ -123,7 +123,7 @@ function EditMealModal({
               }}
             />
             {time.length > 0 && !isValidTime && (
-              <Text style={{ color: "#EF4444", fontSize: 11, marginBottom: 10 }}>Format invalide — ex: 08:30, 23:45</Text>
+              <Text style={{ color: "#EF4444", fontSize: 11, marginBottom: 10 }}>Format invalide, ex: 08:30, 23:45</Text>
             )}
 
             <Text style={{ color: theme.colors.muted, fontSize: 11, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{t.meals_meal_details}</Text>

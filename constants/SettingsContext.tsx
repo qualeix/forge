@@ -161,6 +161,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         );
       }
 
+      // Valeurs par défaut des notifications (INSERT OR IGNORE = pas d'écrasement si déjà configuré)
+      await database.runAsync(`
+        INSERT OR IGNORE INTO settings (key, value) VALUES
+          ('notif_meals_on', '1'),
+          ('notif_meals_offset', '60'),
+          ('notif_workouts_on', '1'),
+          ('notif_workouts_time', '16:15'),
+          ('notif_workouts_body', ''),
+          ('notif_timer_on', '1')
+      `);
+
       setDb(database);
     }
     init();

@@ -102,7 +102,7 @@ export default function TodayScreen() {
           </View>
         </Animated.View>
 
-        {/* Carte séance — jours d'entraînement uniquement */}
+        {/* Carte séance - jours d'entraînement uniquement */}
         {todayWorkout && (
           <Animated.View style={[{ marginBottom: theme.spacing.lg }, animStyle(1)]}>
             <Text style={{ color: theme.colors.textSecondary, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>

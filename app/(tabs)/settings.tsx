@@ -6,6 +6,7 @@ import {
   Pressable,
   Animated,
   TextInput,
+  AppState,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,6 +19,8 @@ import { ScalePress } from "../../components/ScalePress";
 import {
   requestPermission,
   getPermissionStatus,
+  checkBatteryOptimizationIgnored,
+  requestIgnoreBatteryOptimizations,
   scheduleMealNotifications,
   scheduleWorkoutNotifications,
   cancelMealNotifications,
@@ -108,6 +111,7 @@ export default function SettingsScreen() {
   const { schedule, workouts } = useProgram();
 
   const [permStatus, setPermStatus] = useState<"granted" | "denied" | "undetermined">("undetermined");
+  const [batteryOptStatus, setBatteryOptStatus] = useState<"granted" | "undetermined">("undetermined");
   const [mealsOn, setMealsOn] = useState(false);
   const [workoutsOn, setWorkoutsOn] = useState(false);
   const [timerOn, setTimerOn] = useState(false);
@@ -133,7 +137,7 @@ export default function SettingsScreen() {
     if (!db) return;
     async function load() {
       const rows = await db!.getAllAsync<{ key: string; value: string }>(
-        "SELECT key, value FROM settings WHERE key IN ('notif_meals_on','notif_workouts_on','notif_timer_on','notif_meals_offset','notif_workouts_time','notif_workouts_body')"
+        "SELECT key, value FROM settings WHERE key IN ('notif_meals_on','notif_workouts_on','notif_timer_on','notif_meals_offset','notif_workouts_time','notif_workouts_body','battery_opt_granted')"
       );
       const map: Record<string, string> = {};
       rows.forEach((r) => { map[r.key] = r.value; });
@@ -156,6 +160,15 @@ export default function SettingsScreen() {
     }
     load();
     getPermissionStatus().then(setPermStatus);
+    checkBatteryOptimizationIgnored().then((ok) => setBatteryOptStatus(ok ? "granted" : "undetermined"));
+
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        getPermissionStatus().then(setPermStatus);
+        checkBatteryOptimizationIgnored().then((ok) => setBatteryOptStatus(ok ? "granted" : "undetermined"));
+      }
+    });
+    return () => sub.remove();
   }, [db]);
 
   useEffect(() => {
@@ -170,6 +183,12 @@ export default function SettingsScreen() {
   const handleRequestPermission = async () => {
     const granted = await requestPermission();
     setPermStatus(granted ? "granted" : "denied");
+  };
+
+  const handleRequestBatteryOpt = async () => {
+    await requestIgnoreBatteryOptimizations();
+    const ok = await checkBatteryOptimizationIgnored();
+    setBatteryOptStatus(ok ? "granted" : "undetermined");
   };
 
   const handleApply = async () => {
@@ -277,12 +296,58 @@ export default function SettingsScreen() {
                   {permStatus === "granted"
                     ? "Autorisée"
                     : permStatus === "denied"
-                    ? "Refusée — à modifier dans les réglages du téléphone"
+                    ? "Refusée, à modifier dans les réglages du téléphone"
                     : "Non demandée"}
                 </Text>
               </View>
               {permStatus !== "granted" && permStatus !== "denied" && (
                 <ScalePress onPress={handleRequestPermission} style={{
+                  backgroundColor: theme.colors.amber,
+                  borderRadius: theme.radius.sm,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                }}>
+                  <Text style={{ color: "#0D0D0D", fontSize: 12, fontWeight: "800" }}>Activer</Text>
+                </ScalePress>
+              )}
+            </View>
+          </View>
+
+          {/* Battery optimization card */}
+          <View style={{
+            backgroundColor: theme.colors.card,
+            borderRadius: theme.radius.lg,
+            borderWidth: 1,
+            borderColor: batteryOptStatus === "granted" ? theme.colors.amberDeep : theme.colors.border,
+            padding: theme.spacing.md,
+            marginBottom: 8,
+          }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <View style={{
+                backgroundColor: batteryOptStatus === "granted" ? theme.colors.amberSubtle : theme.colors.cardElevated,
+                borderRadius: theme.radius.sm,
+                padding: 8,
+                borderWidth: 1,
+                borderColor: batteryOptStatus === "granted" ? theme.colors.amberDeep : theme.colors.border,
+              }}>
+                <Ionicons
+                  name={batteryOptStatus === "granted" ? "battery-charging" : "battery-charging-outline"}
+                  size={18}
+                  color={batteryOptStatus === "granted" ? theme.colors.amber : theme.colors.muted}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "700" }}>
+                  Arrière-plan
+                </Text>
+                <Text style={{ color: batteryOptStatus === "granted" ? theme.colors.amber : theme.colors.textSecondary, fontSize: 11, marginTop: 1 }}>
+                  {batteryOptStatus === "granted"
+                    ? "Activé"
+                    : "Désactivé"}
+                </Text>
+              </View>
+              {batteryOptStatus !== "granted" && (
+                <ScalePress onPress={handleRequestBatteryOpt} style={{
                   backgroundColor: theme.colors.amber,
                   borderRadius: theme.radius.sm,
                   paddingHorizontal: 12,
@@ -436,7 +501,7 @@ export default function SettingsScreen() {
           }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: theme.spacing.md }}>
               <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "700" }}>Version</Text>
-              <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>1.7.3</Text>
+              <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>1.7.8</Text>
             </View>
             <View style={{ height: 1, backgroundColor: theme.colors.border, marginHorizontal: 16 }} />
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: theme.spacing.md }}>

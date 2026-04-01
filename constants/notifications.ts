@@ -1,5 +1,6 @@
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
+import * as IntentLauncher from "expo-intent-launcher";
+import { Platform, NativeModules } from "react-native";
 import type { MenuMeal } from "./MenuContext";
 import type { WorkoutRecord } from "./ProgramContext";
 
@@ -29,6 +30,26 @@ export async function requestPermission(): Promise<boolean> {
 export async function getPermissionStatus(): Promise<"granted" | "denied" | "undetermined"> {
   const { status } = await Notifications.getPermissionsAsync();
   return status as "granted" | "denied" | "undetermined";
+}
+
+export async function checkBatteryOptimizationIgnored(): Promise<boolean> {
+  if (Platform.OS !== "android") return true;
+  try {
+    return await NativeModules.BatteryModule.isIgnoringBatteryOptimizations();
+  } catch {
+    return false;
+  }
+}
+
+// Lance le dialog d'exemption batterie.
+export async function requestIgnoreBatteryOptimizations(): Promise<void> {
+  if (Platform.OS !== "android") return;
+  try {
+    await IntentLauncher.startActivityAsync(
+      "android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" as any,
+      { data: "package:com.forge.app" }
+    );
+  } catch {}
 }
 
 async function cancelByType(type: string) {
