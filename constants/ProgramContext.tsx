@@ -88,7 +88,6 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
       setSchedule(sched);
     }
 
-    // Workouts (exclude "home" from assignable list display — it's still in DB)
     const wRows = await db.getAllAsync<{
       key: string; name: string; name_fr: string; rest_seconds: number; sort_order: number; notif_enabled: number; notif_time: string; notif_body: string;
     }>("SELECT key, name, name_fr, rest_seconds, sort_order, notif_enabled, notif_time, notif_body FROM workouts ORDER BY sort_order");

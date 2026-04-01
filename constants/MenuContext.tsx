@@ -18,7 +18,7 @@ type MenuCtx = {
   menuData: Record<string, MenuMeal[]>;
   addMeal: (dayKey: DayKey, meal: { name: string; time: string; details: string; notif_enabled?: number; notif_offset?: number }) => Promise<void>;
   updateMeal: (id: number, fields: { name?: string; time?: string; details?: string; notif_enabled?: number; notif_offset?: number }) => Promise<void>;
-  deleteMeal: (id: number, dayKey: string) => Promise<void>;
+  deleteMeal: (id: number) => Promise<void>;
 };
 
 const MenuContext = createContext<MenuCtx>({
@@ -90,7 +90,7 @@ export function MenuProvider({ children }: { children: ReactNode }) {
     await load();
   }, [ownDb, load]);
 
-  const deleteMeal = useCallback(async (id: number, _dayKey: string) => {
+  const deleteMeal = useCallback(async (id: number) => {
     if (!ownDb) return;
     await ownDb.runAsync("DELETE FROM menu_meals WHERE id = ?", [id]);
     await load();

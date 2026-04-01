@@ -436,7 +436,7 @@ export default function SettingsScreen() {
           }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: theme.spacing.md }}>
               <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "700" }}>Version</Text>
-              <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>1.7.0</Text>
+              <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>1.7.2</Text>
             </View>
             <View style={{ height: 1, backgroundColor: theme.colors.border, marginHorizontal: 16 }} />
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: theme.spacing.md }}>

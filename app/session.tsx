@@ -525,14 +525,14 @@ export default function SessionScreen() {
               <View style={{
                 position: "absolute", width: 200, height: 200,
                 borderRadius: 100, borderWidth: 6,
-                borderColor: timerDone ? theme.colors.amber : theme.colors.amber,
+                borderColor: theme.colors.amber,
                 opacity: timerDone ? 1 : Math.max(0.1, restProgress),
                 shadowColor: theme.colors.amber,
                 shadowOffset: { width: 0, height: 0 },
                 shadowOpacity: timerDone ? 0.8 : 0.55 * restProgress,
                 shadowRadius: timerDone ? 24 : 16,
               }} />
-              <Text style={{ color: timerDone ? theme.colors.amber : theme.colors.amber, fontSize: 76, fontWeight: "900", lineHeight: 84 }}>
+              <Text style={{ color: theme.colors.amber, fontSize: 76, fontWeight: "900", lineHeight: 84 }}>
                 {restSecondsLeft}
               </Text>
               <Text style={{ color: theme.colors.textSecondary, fontSize: 12, letterSpacing: 1 }}>{t.session_seconds}</Text>

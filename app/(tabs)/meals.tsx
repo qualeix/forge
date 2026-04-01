@@ -265,7 +265,7 @@ function ExpandableDay({ dayKey, isToday }: { dayKey: DayKey; isToday: boolean }
                   <ScalePress onPress={() => setEditingMeal(meal)} hitSlop={6} style={{ padding: 6 }}>
                     <Ionicons name="create-outline" size={17} color={theme.colors.amber} />
                   </ScalePress>
-                  <ScalePress onPress={() => deleteMeal(meal.id, dayKey)} hitSlop={6} style={{ padding: 6 }}>
+                  <ScalePress onPress={() => deleteMeal(meal.id)} hitSlop={6} style={{ padding: 6 }}>
                     <Ionicons name="close-circle-outline" size={17} color="#EF4444" />
                   </ScalePress>
                 </View>

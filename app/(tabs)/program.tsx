@@ -19,9 +19,6 @@ export default function ProgramScreen() {
     addExercise, removeExercise, updateExercise, reorderExercises,
   } = useProgram();
 
-  // Filtrer "home" — non assignable
-  const assignableWorkouts = workouts.filter((w) => w.key !== "home");
-
   const [assignModal, setAssignModal] = useState<number | null>(null);
   const [expandedWorkout, setExpandedWorkout] = useState<string | null>(null);
 
@@ -213,7 +210,7 @@ export default function ProgramScreen() {
             {t.program_workouts}
           </Text>
 
-          {assignableWorkouts.map((workout) => {
+          {workouts.map((workout) => {
             const workoutKey = workout.key;
             const exs = exercises[workoutKey] ?? [];
             const isExpanded = expandedWorkout === workoutKey;
@@ -379,7 +376,7 @@ export default function ProgramScreen() {
             </View>
             <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
               <View style={{ gap: 8 }}>
-                {assignableWorkouts.map((w) => {
+                {workouts.map((w) => {
                   const isSelected = assignModal !== null && schedule[assignModal] === w.key;
                   return (
                     <ScalePress

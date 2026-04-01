@@ -5,7 +5,7 @@ export const WORKOUT_DATA = {
     exercises: [
       {
         id: "dips",
-        name: "Dips",
+        name: "Dips (non lestés)",
         sets: 3,
         reps: "max",
         cue: "Technique avant tout, qualité avant répétitions.",
@@ -14,7 +14,7 @@ export const WORKOUT_DATA = {
       },
       {
         id: "bench_press",
-        name: "Développé couché",
+        name: "Développé couché (machine)",
         sets: 4,
         reps: 8,
         cue: "Contrôle > charge — technique d'abord, poids ensuite.",
@@ -32,7 +32,7 @@ export const WORKOUT_DATA = {
       },
       {
         id: "lateral_raises",
-        name: "Élévations latérales",
+        name: "Élévations latérales (haltères)",
         sets: 3,
         reps: 12,
         cue: "Lent et contrôlé, l'élan tue cet exercice.",
@@ -65,7 +65,7 @@ export const WORKOUT_DATA = {
       },
       {
         id: "seated_row",
-        name: "Rowing assis",
+        name: "Rowing assis (machine)",
         sets: 4,
         reps: 10,
         cue: "Contracter les omoplates à la contraction complète.",
@@ -102,7 +102,7 @@ export const WORKOUT_DATA = {
     ],
   },
   sunday: {
-    name: "LEG",
+    name: "LEGS",
     restSeconds: 90,
     exercises: [
       {
@@ -149,29 +149,6 @@ export const WORKOUT_DATA = {
         cue: "Extension complète, pause, retour lent.",
         technique:
           "Étendre complètement le genou, pause 1s. Descente contrôlée en 3s. Hanches bien plaquées contre le pad.",
-      },
-    ],
-  },
-  home: {
-    name: "Routine Maison",
-    exercises: [
-      {
-        id: "starfish_abs",
-        name: "Abdos étoile",
-        sets: 3,
-        reps: 20,
-        cue: "Bas du dos plaqué au sol en permanence.",
-        technique:
-          "Allongé à plat, bras écartés. Raprocher les genoux du torse et rapprocher les mains des chevilles. 2s montée, 2s descente.",
-      },
-      {
-        id: "plank",
-        name: "Gainage",
-        sets: 3,
-        reps: "30s",
-        cue: "Le corps entier doit trembler, le bassin un peu abaissé.",
-        technique:
-          "Fessiers et abdos contractés simultanément. Regard vers le bas, avant-bras à plat, coudes sous les épaules. Ajouter 5-10s par semaine quand c'est confortable.",
       },
     ],
   },

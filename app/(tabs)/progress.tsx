@@ -87,9 +87,7 @@ export default function ProgressScreen() {
     await loadData(db);
   };
 
-  // Groupes d'exercices dynamiques depuis ProgramContext (sans "home")
   const exerciseGroups = workouts
-    .filter((w) => w.key !== "home")
     .map((w) => ({
       label: getWorkoutDisplayName(w.key),
       exercises: (exercises[w.key] ?? []).map((e) => ({
