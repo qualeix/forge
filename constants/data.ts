@@ -41,7 +41,7 @@ export const WORKOUT_DATA = {
       },
       {
         id: "triceps_pushdown",
-        name: "Extension triceps (poulie)",
+        name: "Extensions triceps (poulie)",
         sets: 3,
         reps: 12,
         cue: "Extension complète en bas (c'est là que le triceps se contracte pleinement).",
@@ -116,7 +116,7 @@ export const WORKOUT_DATA = {
       },
       {
         id: "hip_thrust",
-        name: "Hip Thrust machine",
+        name: "Hip thrust (machine)",
         sets: 4,
         reps: 10,
         cue: "Poussée à travers les talons. Fessiers fortement contractés en extension complète.",
@@ -134,7 +134,7 @@ export const WORKOUT_DATA = {
       },
       {
         id: "leg_curl",
-        name: "Leg Curl",
+        name: "Leg curl",
         sets: 3,
         reps: 12,
         cue: "Contrôle d'excentrique (c'est là que les ischio-jambiers se développent).",
@@ -143,7 +143,7 @@ export const WORKOUT_DATA = {
       },
       {
         id: "leg_extensions",
-        name: "Extensions jambes",
+        name: "Leg extension",
         sets: 3,
         reps: 12,
         cue: "Extension complète, pause, retour lent.",
