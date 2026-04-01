@@ -1,6 +1,6 @@
 export const WORKOUT_DATA = {
   tuesday: {
-    name: "Poussée",
+    name: "PUSH",
     restSeconds: 90,
     exercises: [
       {
@@ -8,9 +8,9 @@ export const WORKOUT_DATA = {
         name: "Dips",
         sets: 3,
         reps: "max",
-        cue: "Technique avant tout — qualité avant répétitions.",
+        cue: "Technique avant tout, qualité avant répétitions.",
         technique:
-          "Légèrement penché en avant (~15°) pour cibler les pectoraux. Descente jusqu'à 90° aux coudes. Remontée explosive, extension complète en haut. Dès que tu fais 12-12-12 clean, ajoute une ceinture lestée.",
+          "Légèrement penché en avant (~15°) pour cibler les pectoraux. Descente jusqu'à 90° aux coudes. Remontée explosive, extension complète en haut.",
       },
       {
         id: "bench_press",
@@ -19,48 +19,39 @@ export const WORKOUT_DATA = {
         reps: 8,
         cue: "Contrôle > charge — technique d'abord, poids ensuite.",
         technique:
-          "Omoplates rétractées et plaquées contre le banc. Trajectoire : barre vers pectoraux inférieurs, légèrement diagonal. 3s descente, 1s pause, poussée explosive. 8-8-8-8 clean → +2,5kg.",
-      },
-      {
-        id: "pec_deck",
-        name: "Pec Deck",
-        sets: 3,
-        reps: 12,
-        cue: "Contracte fort les pectoraux en fin de mouvement.",
-        technique:
-          "Réglage : poignées à hauteur des pectoraux. Coudes légèrement fléchis en permanence. Contraction maximale, pause 1s. Retour lent (3s) — l'étirement est là où les pectoraux se développent.",
+          "Omoplates rétractées et plaquées contre le banc. Trajectoire : barre vers pectoraux inférieurs, légèrement diagonal. 3s descente, 1s pause, poussée explosive.",
       },
       {
         id: "db_military_press",
-        name: "Développé militaire haltères",
+        name: "Développé militaire (haltères)",
         sets: 3,
         reps: 10,
         cue: "Mouvement contrôlé, pas d'élan.",
         technique:
-          "Départ au niveau des oreilles, coudes à ~75° du torse. Poussée verticale, pas de verrouillage en haut. Descente lente (2-3s). 10-10-10 clean → montée en charge.",
+          "Départ au niveau des oreilles, coudes à ~75° du torse. Poussée verticale, pas de verrouillage en haut. Descente lente (2-3s).",
       },
       {
         id: "lateral_raises",
         name: "Élévations latérales",
         sets: 3,
-        reps: 15,
-        cue: "Lent et contrôlé — l'élan tue cet exercice.",
+        reps: 12,
+        cue: "Lent et contrôlé, l'élan tue cet exercice.",
         technique:
-          "Légèrement penché en avant (~10°), montée jusqu'à hauteur d'épaule. Mène avec les coudes, pas les mains. Pause 1s en haut. 3-4s de descente. Charge légère — le chargement excessif ne sert à rien ici.",
+          "Légèrement penché en avant (~10°), montée jusqu'à hauteur d'épaule. Mener avec les coudes, pas les mains. Pause 1s en haut. 3-4s de descente. Charge légère.",
       },
       {
         id: "triceps_pushdown",
-        name: "Extension triceps poulie",
+        name: "Extension triceps (poulie)",
         sets: 3,
-        reps: 15,
-        cue: "Extension complète en bas — c'est là que le triceps se contracte pleinement.",
+        reps: 12,
+        cue: "Extension complète en bas (c'est là que le triceps se contracte pleinement).",
         technique:
           "Coudes collés au corps. Bras supérieurs verticaux et immobiles. Seuls les avant-bras bougent. Excentrique lent (3s remontée), poussée contrôlée vers le bas.",
       },
     ],
   },
   friday: {
-    name: "Tirage",
+    name: "PULL",
     restSeconds: 90,
     exercises: [
       {
@@ -68,59 +59,50 @@ export const WORKOUT_DATA = {
         name: "Tirage vertical",
         sets: 4,
         reps: 8,
-        cue: "Dorsaux > biceps — initie avec les omoplates, pas les bras.",
+        cue: "Dorsaux > biceps, initie avec les omoplates, pas les bras.",
         technique:
           "Prise large, largeur épaules ou légèrement plus. Étirement complet en haut. Tirer la barre vers la clavicule, légère inclinaison arrière (~15°). Coudes vers le bas et l'arrière. 3s remontée, traction explosive.",
       },
       {
         id: "seated_row",
-        name: "Tirage horizontal assis",
+        name: "Rowing assis",
         sets: 4,
         reps: 10,
-        cue: "Contracte les omoplates à la contraction complète — c'est ça, la rep.",
+        cue: "Contracter les omoplates à la contraction complète.",
         technique:
           "Torse droit et immobile. Tirer vers la poitrine basse. Coudes proches du corps. 3s retour, étirement complet à l'avant. Pas de haussement d'épaules.",
+      },
+      {
+        id: "rear_delt_machine",
+        name: "Deltoïdes postérieurs",
+        sets: 3,
+        reps: 15,
+        cue: "À l'extension complète, contracter les deltoïdes postérieurs 1s.",
+        technique:
+          "Poignées à hauteur des épaules, poitrine légèrement contre le pad. Coudes légèrement fléchis. Pousser vers l'arrière en menant avec les coudes. Retour très lent (3-4s). La charge doit paraître ridiculement légère.",
       },
       {
         id: "hammer_curls",
         name: "Curl marteau",
         sets: 3,
         reps: 10,
-        cue: "Prise neutre cible le brachial — épaissit les bras.",
+        cue: "Prise neutre qui cible le brachial et épaissit les bras.",
         technique:
           "Coudes collés, pas de balancement. Curl jusqu'à hauteur d'épaule, pause 1s, descente en 3s. Alternance ou simultané.",
       },
       {
-        id: "rear_delt_machine",
-        name: "Machine deltoïdes postérieurs",
-        sets: 3,
-        reps: 15,
-        cue: "À l'extension complète, contracte les deltoïdes postérieurs 1s.",
-        technique:
-          "Poignées à hauteur des épaules, poitrine légèrement contre le pad. Coudes légèrement fléchis. Pousser vers l'arrière en menant avec les coudes. Retour très lent (3-4s). La charge doit paraître ridiculement légère — c'est normal.",
-      },
-      {
         id: "wrist_curls",
-        name: "Curl des poignets",
+        name: "Curl poignets",
         sets: 3,
         reps: 15,
         cue: "Avant-bras à plat, paume vers le haut. Seul le poignet bouge.",
         technique:
-          "Descendre aussi bas que confortable, remonter complètement. Commencer à 5-8kg max. Sensation de chaleur normale. Douleur vive ou craquement — arrêt immédiat.",
-      },
-      {
-        id: "preacher_curls",
-        name: "Curl au pupitre",
-        sets: 3,
-        reps: 10,
-        cue: "Isolation stricte — le pupitre élimine tout élan.",
-        technique:
-          "Règle le pupitre pour que les aisselles reposent sur le bord supérieur. Bras en extension complète en bas — pas d'hyperextension des coudes. Curl jusqu'à contraction complète, contracte 1s en haut. Descente en 3s — contrôle la phase négative. Poignets neutres, ne pas les fléchir.",
+          "Descendre aussi bas que confortable, remonter complètement. Sensation de chaleur: normale, douleur vive ou craquement: arrêt immédiat.",
       },
     ],
   },
   sunday: {
-    name: "Jambes",
+    name: "LEG",
     restSeconds: 90,
     exercises: [
       {
@@ -128,7 +110,7 @@ export const WORKOUT_DATA = {
         name: "Presse à jambes",
         sets: 4,
         reps: 8,
-        cue: "Ne JAMAIS verrouiller les genoux en haut.",
+        cue: "Ne JAMAIS verrouiller les genoux en haut (risque de blessure).",
         technique:
           "Pieds au centre de la plateforme, largeur épaules. Descente jusqu'à ~90° aux genoux. Genoux dans l'axe des pieds. Contrôle la descente (2-3s), poussée explosive.",
       },
@@ -137,36 +119,27 @@ export const WORKOUT_DATA = {
         name: "Hip Thrust machine",
         sets: 4,
         reps: 10,
-        cue: "Pousse à travers les talons. Contracte les fessiers fort en extension complète.",
+        cue: "Poussée à travers les talons. Fessiers fortement contractés en extension complète.",
         technique:
-          "En haut, torse parallèle au sol — pas d'hyperextension lombaire. Amplitude complète vers le bas pour étirer les fessiers. Pause 1-2s en haut avec contraction des fessiers.",
-      },
-      {
-        id: "rdl",
-        name: "Soulevé de terre roumain",
-        sets: 3,
-        reps: 10,
-        cue: "Hip hinge — la barre reste proche des jambes tout le temps.",
-        technique:
-          "Repousse les hanches en arrière, pas vers le bas. Légère flexion des genoux, dos plat, poitrine haute. Descente jusqu'à mi-tibia jusqu'à l'étirement profond des ischio-jambiers. Pousse les hanches en avant pour remonter. 3s descente.",
+          "En haut, torse parallèle au sol, pas d'hyperextension lombaire. Amplitude complète vers le bas pour étirer les fessiers. Pause 1-2s en haut avec contraction des fessiers.",
       },
       {
         id: "calf_raises",
-        name: "Extensions mollets assis",
+        name: "Extensions mollets (machine)",
         sets: 4,
         reps: 15,
-        cue: "Amplitude complète et temps sous tension — c'est tout l'intérêt.",
+        cue: "Amplitude complète et sous tension",
         technique:
-          "Talons ENTIÈREMENT sous le bord de la plateforme. Pause 1s en bas. Montée en flexion plantaire complète, contracte fort, pause 1s en haut. 3s descente. Si ça brûle, c'est bien.",
+          "Talons ENTIÈREMENT sous le bord de la plateforme. Pause 1s en bas. Montée en flexion plantaire complète, forte contraction, pause 1s en haut. 3s descente.",
       },
       {
         id: "leg_curl",
         name: "Leg Curl",
         sets: 3,
         reps: 12,
-        cue: "Contrôle l'excentrique — c'est là que les ischio-jambiers se développent.",
+        cue: "Contrôle d'excentrique (c'est là que les ischio-jambiers se développent).",
         technique:
-          "Curl jusqu'à contraction complète, pause 1s. Descente en 3s — résiste jusqu'au bout. Hanches plaquées contre le pad.",
+          "Flexion jusqu'à contraction complète, pause 1s. Descente en 3s, résister jusqu'au bout. Hanches plaquées contre le pad.",
       },
       {
         id: "leg_extensions",
@@ -175,7 +148,7 @@ export const WORKOUT_DATA = {
         reps: 12,
         cue: "Extension complète, pause, retour lent.",
         technique:
-          "Étendre presque à fond, pause 1s. Remontée en 3s. Hanches bien plaquées contre le pad.",
+          "Étendre complètement le genou, pause 1s. Descente contrôlée en 3s. Hanches bien plaquées contre le pad.",
       },
     ],
   },
@@ -183,31 +156,22 @@ export const WORKOUT_DATA = {
     name: "Routine Maison",
     exercises: [
       {
-        id: "plank",
-        name: "Gainage",
-        sets: 3,
-        reps: "30s",
-        cue: "Rétroversion du bassin — pousse légèrement les hanches en avant.",
-        technique:
-          "Contracte fessiers et abdos simultanément. Regard vers le bas, avant-bras à plat, coudes sous les épaules. Ajouter 5-10s par semaine quand c'est confortable.",
-      },
-      {
-        id: "side_abs",
-        name: "Abdos obliques",
-        sets: 3,
-        reps: 20,
-        cue: "Cible les obliques — contraction lente, amplitude complète.",
-        technique:
-          "En appui latéral, lever les jambes ou le buste. 20 répétitions de chaque côté par série.",
-      },
-      {
         id: "starfish_abs",
         name: "Abdos étoile",
         sets: 3,
         reps: 20,
         cue: "Bas du dos plaqué au sol en permanence.",
         technique:
-          "Allongé à plat, bras et jambes étirés. Lever le bras et la jambe opposés simultanément. 2s montée, 2s descente.",
+          "Allongé à plat, bras écartés. Raprocher les genoux du torse et rapprocher les mains des chevilles. 2s montée, 2s descente.",
+      },
+      {
+        id: "plank",
+        name: "Gainage",
+        sets: 3,
+        reps: "30s",
+        cue: "Le corps entier doit trembler, le bassin un peu abaissé.",
+        technique:
+          "Fessiers et abdos contractés simultanément. Regard vers le bas, avant-bras à plat, coudes sous les épaules. Ajouter 5-10s par semaine quand c'est confortable.",
       },
     ],
   },
@@ -217,203 +181,203 @@ export const MENU_DATA = {
   monday: {
     meals: [
       {
-        time: "8:00",
+        time: "07:45",
         name: "Œufs brouillés sur toast",
         details: "2 œufs brouillés au beurre, 2 tranches de pain complet, 1 verre de jus d'orange naturel",
       },
       {
         time: "12:00",
-        name: "Bowl thon riz",
-        details: "1 boîte de thon (160g égoutté), 125g de riz blanc, vinaigrette huile d'olive + vinaigre de riz + citron",
+        name: "Riz et poulet teriyaki",
+        details: "125g de riz blanc, 250g de blanc de poulet estragon, 60g de petits pois/haricots verts et sauce teriyaki",
       },
       {
         time: "16:30",
-        name: "Shake whey + banane",
-        details: "1 shake Gold Standard Whey",
+        name: "Shake protéiné",
+        details: "Lait demi-écremé, whey et fruits rouges surgelés",
       },
       {
         time: "18:30",
-        name: "Cuisses de poulet + pâtes",
-        details: "250g de cuisses de poulet désossées, marinade : huile d'olive, citron, ail, paprika, cumin. 200g de pâtes",
+        name: "Pâtes et cuisse de poulet",
+        details: " 125g de pâtes et 250g de cuisses de poulet avec marinade: huile d'olive, citron, épices pour poulet",
       },
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
       },
     ],
   },
   tuesday: {
     meals: [
       {
-        time: "8:00",
+        time: "07:45",
         name: "Œufs sur toast",
-        details: "3 œufs au plat, 2 tranches de pain complet, 1 banane, 1 verre de jus d'orange naturel",
+        details: "3 œufs au plat, 3 tranches de pain complet, 1 verre de jus d'orange naturel",
       },
       {
         time: "12:00",
-        name: "Blanc de poulet + riz",
-        details: "200g de blanc de poulet aux herbes, 125g de riz blanc, 100g de petits pois surgelés, sauce soja + citron",
+        name: "Riz et poulet teriyaki",
+        details: "125g de riz blanc, 250g de blanc de poulet estragon, 60g de petits pois/haricots verts et sauce teriyaki",
       },
       {
         time: "16:30",
-        name: "Pré-séance : banane + whey",
-        details: "1 banane, 1 shake Gold Standard Whey (lait demi-écrémé)",
+        name: "Shake protéiné pré-séance",
+        details: "Lait demi-écremé, whey et banane",
       },
       {
         time: "18:30",
-        name: "Blanc de poulet + pâtes",
-        details: "300g de blanc de poulet, 125g de pâtes, sauce tomate (ail, basilic, huile d'olive), 30g de grana padano",
+        name: "Pâtes et poulet crème tomate",
+        details: "125g de pâtes, 300g de blanc de poulet, passata de tomate, 1 cuillière à café de sucre, basilic et un peu de crème",
       },
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
       },
     ],
   },
   wednesday: {
     meals: [
       {
-        time: "8:00",
-        name: "Bowl yaourt",
-        details: "200g de yaourt nature, 1 banane tranchée, 1 c. à soupe de miel, 1 verre de jus d'orange naturel",
+        time: "07:45",
+        name: "Cottage cheese et toasts",
+        details: "Cottage cheese, tomates cerises et 2 tranches de pain complet, 1 verre de jus d'orange naturel",
       },
       {
         time: "12:00",
-        name: "Bowl thon riz",
-        details: "1 boîte de thon (160g égoutté), 125g de riz blanc, vinaigrette huile d'olive + vinaigre de riz + citron",
+        name: "Riz et poulet teriyaki",
+        details: "125g de riz blanc, 250g de blanc de poulet estragon, 60g de petits pois/haricots verts et sauce teriyaki",
       },
       {
         time: "16:30",
-        name: "Shake whey + banane",
-        details: "1 shake Gold Standard Whey",
+        name: "Shake protéiné",
+        details: "Lait demi-écremé, whey et fruits rouges surgelés",
       },
       {
         time: "18:30",
-        name: "Saumon + pâtes",
-        details: "150g de filet de saumon au citron et aneth, 200g de pâtes",
+        name: "Pâtes et cuisse de poulet",
+        details: " 125g de pâtes et 250g de cuisses de poulet avec marinade: huile d'olive, citron, épices pour poulet",
       },
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
       },
     ],
   },
   thursday: {
     meals: [
       {
-        time: "8:00",
-        name: "Toast fromage blanc",
-        details: "2 tranches de pain complet, 150g de fromage blanc, tomates cerises, sel et poivre, 1 verre de jus d'orange",
+        time: "07:45",
+        name: "Cottage cheese et toasts",
+        details: "Cottage cheese, tomates cerises et 2 tranches de pain complet, 1 verre de jus d'orange naturel",
       },
       {
         time: "12:00",
-        name: "Bowl thon riz",
-        details: "1 boîte de thon (160g égoutté), 125g de riz blanc, vinaigrette huile d'olive + vinaigre de riz + citron",
+        name: "Riz et poulet teriyaki",
+        details: "125g de riz blanc, 250g de blanc de poulet estragon, 60g de petits pois/haricots verts et sauce teriyaki",
       },
       {
         time: "16:30",
-        name: "Shake whey + banane",
-        details: "1 shake Gold Standard Whey",
+        name: "Shake protéiné",
+        details: "Lait demi-écremé, whey et fruits rouges surgelés",
       },
       {
         time: "18:30",
-        name: "Cuisses de poulet + pâtes",
-        details: "250g de cuisses de poulet désossées, marinade : huile d'olive, citron, ail, paprika, cumin. 200g de pâtes",
+        name: "Pâtes et cuisse de poulet",
+        details: " 125g de pâtes et 250g de cuisses de poulet avec marinade: huile d'olive, citron, épices pour poulet",
       },
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
       },
     ],
   },
   friday: {
     meals: [
       {
-        time: "8:00",
-        name: "Œufs pochés sur toast",
-        details: "3 œufs pochés, 2 tranches de pain complet, 1 banane, 1 verre de jus d'orange naturel",
+        time: "07:45",
+        name: "Œufs sur toast",
+        details: "3 œufs au plat, 3 tranches de pain complet, 1 verre de jus d'orange naturel",
       },
       {
         time: "12:00",
-        name: "Blanc de poulet + riz",
-        details: "200g de blanc de poulet aux herbes, 125g de riz blanc, 100g de petits pois surgelés, sauce soja + citron",
+        name: "Riz et poulet teriyaki",
+        details: "125g de riz blanc, 250g de blanc de poulet estragon, 60g de petits pois/haricots verts et sauce teriyaki",
       },
       {
         time: "16:30",
-        name: "Pré-séance : banane + whey",
-        details: "1 banane, 1 shake Gold Standard Whey (lait demi-écrémé)",
+        name: "Shake protéiné pré-séance",
+        details: "Lait demi-écremé, whey et banane",
       },
       {
         time: "18:30",
-        name: "Blanc de poulet + pâtes",
-        details: "300g de blanc de poulet, 125g de pâtes, sauce tomate (ail, basilic, huile d'olive), 30g de grana padano",
+        name: "Pâtes et poulet crème tomate",
+        details: "125g de pâtes, 300g de blanc de poulet, passata de tomate, 1 cuillière à café de sucre, basilic et un peu de crème",
       },
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
       },
     ],
   },
   saturday: {
     meals: [
       {
-        time: "8:00",
-        name: "Œufs sur toast",
-        details: "3 œufs brouillés avec tomates cerises, 2 tranches de pain complet, 1 verre de jus d'orange",
+        time: "07:45",
+        name: "Cottage cheese et toasts",
+        details: "Cottage cheese, tomates cerises et 2 tranches de pain complet, 1 verre de jus d'orange naturel",
       },
       {
         time: "12:00",
-        name: "Bowl thon riz",
-        details: "1 boîte de thon (160g égoutté), 125g de riz blanc, vinaigrette huile d'olive + vinaigre de riz + citron",
+        name: "Riz et poulet teriyaki",
+        details: "125g de riz blanc, 250g de blanc de poulet estragon, 60g de petits pois/haricots verts et sauce teriyaki",
       },
       {
         time: "16:30",
-        name: "Shake whey + banane",
-        details: "1 shake Gold Standard Whey",
+        name: "Shake protéiné",
+        details: "Lait demi-écremé, whey et fruits rouges surgelés",
       },
       {
         time: "18:30",
-        name: "Saumon + pâtes",
-        details: "150g de filet de saumon au citron et aneth, 200g de pâtes",
+        name: "Pâtes et cuisse de poulet",
+        details: " 125g de pâtes et 250g de cuisses de poulet avec marinade: huile d'olive, citron, épices pour poulet",
       },
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
       },
     ],
   },
   sunday: {
     meals: [
       {
-        time: "8:00",
+        time: "07:45",
         name: "Œufs sur toast",
-        details: "3 œufs au plat, 2 tranches de pain complet, 1 banane, 1 verre de jus d'orange naturel",
+        details: "3 œufs au plat, 3 tranches de pain complet, 1 verre de jus d'orange naturel",
       },
       {
         time: "12:00",
-        name: "Blanc de poulet + riz",
-        details: "200g de blanc de poulet aux herbes, 125g de riz blanc, 100g de petits pois surgelés, sauce soja + citron",
+        name: "Riz et poulet teriyaki",
+        details: "125g de riz blanc, 250g de blanc de poulet estragon, 60g de petits pois/haricots verts et sauce teriyaki",
       },
       {
         time: "16:30",
-        name: "Pré-séance : banane + whey",
-        details: "1 banane, 1 shake Gold Standard Whey (lait demi-écrémé)",
+        name: "Shake protéiné pré-séance",
+        details: "Lait demi-écremé, whey et banane",
       },
       {
         time: "18:30",
-        name: "Blanc de poulet + pâtes",
-        details: "300g de blanc de poulet, 125g de pâtes, sauce tomate (ail, basilic, huile d'olive), 30g de grana padano",
+        name: "Pâtes et poulet crème tomate",
+        details: "125g de pâtes, 300g de blanc de poulet, passata de tomate, 1 cuillière à café de sucre, basilic et un peu de crème",
       },
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de myrtilles surgelées, 1 c. à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
       },
     ],
   },
@@ -424,16 +388,16 @@ export type WorkoutKey = keyof typeof WORKOUT_DATA;
 
 // Planning par défaut : index du jour (0=Dim..6=Sam) → clé séance ou null (repos)
 export const DEFAULT_SCHEDULE: Record<number, string | null> = {
-  0: "sunday",   // Dimanche → Jambes
+  0: "sunday",   // Dimanche → LEGS
   1: null,       // Lundi → Repos
-  2: "tuesday",  // Mardi → Poussée
+  2: "tuesday",  // Mardi → PUSH
   3: null,       // Mercredi → Repos
   4: null,       // Jeudi → Repos
-  5: "friday",   // Vendredi → Tirage
+  5: "friday",   // Vendredi → PULL
   6: null,       // Samedi → Repos
 };
 
-// Ordre d'affichage : lundi en premier
+// Ordre d'affichage (lundi en premier)
 export const WEEK_DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 export function getTodayKey(): DayKey {
