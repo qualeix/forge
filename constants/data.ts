@@ -180,7 +180,7 @@ export const MENU_DATA = {
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelés, 1 cuillère à café de miel",
       },
     ],
   },
@@ -209,7 +209,7 @@ export const MENU_DATA = {
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelés, 1 cuillère à café de miel",
       },
     ],
   },
@@ -238,7 +238,7 @@ export const MENU_DATA = {
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelés, 1 cuillère à café de miel",
       },
     ],
   },
@@ -267,7 +267,7 @@ export const MENU_DATA = {
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelés, 1 cuillère à café de miel",
       },
     ],
   },
@@ -296,7 +296,7 @@ export const MENU_DATA = {
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelés, 1 cuillère à café de miel",
       },
     ],
   },
@@ -325,7 +325,7 @@ export const MENU_DATA = {
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelés, 1 cuillère à café de miel",
       },
     ],
   },
@@ -354,7 +354,7 @@ export const MENU_DATA = {
       {
         time: "20:00",
         name: "Yaourt grec",
-        details: "200g de yaourt grec, 50g de fruits rouges surgelées, 1 cuillère à café de miel",
+        details: "200g de yaourt grec, 50g de fruits rouges surgelés, 1 cuillère à café de miel",
       },
     ],
   },
