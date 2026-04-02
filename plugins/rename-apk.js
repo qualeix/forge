@@ -29,32 +29,11 @@ module.exports = function renameApkPlugin(config) {
       `versionName "${version}"`
     );
 
-    // Add explicit architecture splits to ensure only arm64-v8a
-    const splitsBlock = `
-    splits {
-        abi {
-            reset()
-            include 'arm64-v8a'
-            universalApk false
-        }
-    }`;
-
-    // Add APK renaming logic
-    const renameBlock = `
-    applicationVariants.configureEach { variant ->
-        variant.outputs.configureEach {
-            outputFileName = "forge-v${version}.apk"
-        }
-    }`;
-    
-    // Find the android block and add our configuration
-    const androidBlockMatch = config.modResults.contents.match(/android\s*\{/);
-    if (androidBlockMatch) {
-      config.modResults.contents = config.modResults.contents.replace(
-        androidBlockMatch[0],
-        `android {${splitsBlock}${renameBlock}`
-      );
-    }
+    // Simple replacement: just replace any forge-v*.apk with the new version
+    config.modResults.contents = config.modResults.contents.replace(
+      /forge-v[^"]*\.apk/g,
+      `forge-v${version}.apk`
+    );
 
     return config;
   });
