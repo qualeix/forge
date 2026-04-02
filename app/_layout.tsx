@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import * as Notifications from "expo-notifications";
 import { Platform, View, Text, Animated } from "react-native";
 import { ScalePress } from "../components/ScalePress";
-import { checkForUpdate, downloadAndInstall, UpdateInfo } from "../constants/updater";
+import { downloadAndInstall, UpdateInfo } from "../constants/updater";
 import { theme } from "../constants/theme";
 import { SettingsProvider } from "../constants/SettingsContext";
 import { ProgramProvider } from "../constants/ProgramContext";
@@ -12,13 +12,16 @@ import { MenuProvider } from "../constants/MenuContext";
 import { useSettings } from "../constants/SettingsContext";
 import { useMenu } from "../constants/MenuContext";
 import { useProgram } from "../constants/ProgramContext";
-import { setupNotificationChannel, scheduleMealNotifications, cancelMealNotifications, scheduleWorkoutNotifications, cancelWorkoutNotifications, requestIgnoreBatteryOptimizations } from "../constants/notifications";
+import { UpdateProvider, useUpdate } from "../constants/UpdateContext";
+import { setupNotificationChannel, scheduleMealNotifications, cancelMealNotifications, scheduleWorkoutNotifications, cancelWorkoutNotifications, requestIgnoreBatteryOptimizations, getScheduledNotificationsSummary } from "../constants/notifications";
 
 // Affiche les notifications même quand l'app est au premier plan
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
     shouldSetBadge: false,
   }),
 });
@@ -144,16 +147,18 @@ function NotificationScheduler() {
     workoutsDone.current = true;
     db.getAllAsync<{ key: string; value: string }>(
       "SELECT key, value FROM settings WHERE key IN ('notif_workouts_on','notif_workouts_time','notif_workouts_body')"
-    ).then((rows) => {
+    ).then(async (rows) => {
       const map: Record<string, string> = {};
       rows.forEach((r) => { map[r.key] = r.value; });
       const sched = Array.from({ length: 7 }, (_, i) => schedule[i] ?? null);
-      if ((map["notif_workouts_on"] ?? "1") === "1") {
-        scheduleWorkoutNotifications(sched, workouts, map["notif_workouts_time"] ?? "16:15", map["notif_workouts_body"] ?? "");
+      if ((map["notif_workouts_on"] ?? "0") === "1") {
+        await scheduleWorkoutNotifications(sched, workouts, map["notif_workouts_time"] ?? "16:15", map["notif_workouts_body"] ?? "");
       } else {
-        cancelWorkoutNotifications();
+        await cancelWorkoutNotifications();
       }
-    }).catch(() => {});
+      const summary = await getScheduledNotificationsSummary();
+      console.log("[Forge notif] After workout scheduling — total scheduled:", JSON.stringify(summary));
+    }).catch((e) => { console.warn("[Forge notif] NotificationScheduler workout error:", e); });
   }, [db, programLoaded]);
 
   useEffect(() => {
@@ -161,43 +166,55 @@ function NotificationScheduler() {
     mealsDone.current = true;
     db.getAllAsync<{ key: string; value: string }>(
       "SELECT key, value FROM settings WHERE key IN ('notif_meals_on','notif_meals_offset')"
-    ).then((rows) => {
+    ).then(async (rows) => {
       const map: Record<string, string> = {};
       rows.forEach((r) => { map[r.key] = r.value; });
-      if ((map["notif_meals_on"] ?? "1") === "1") {
-        scheduleMealNotifications(menuData, parseInt(map["notif_meals_offset"] ?? "60") || 60);
+      if ((map["notif_meals_on"] ?? "0") === "1") {
+        await scheduleMealNotifications(menuData, parseInt(map["notif_meals_offset"] ?? "60") || 60);
       } else {
-        cancelMealNotifications();
+        await cancelMealNotifications();
       }
-    }).catch(() => {});
+      const summary = await getScheduledNotificationsSummary();
+      console.log("[Forge notif] After meal scheduling — total scheduled:", JSON.stringify(summary));
+    }).catch((e) => { console.warn("[Forge notif] NotificationScheduler meal error:", e); });
   }, [db, menuData]);
 
   return null;
 }
 
-export default function RootLayout() {
-  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+function UpdateChecker() {
+  const { triggerCheck } = useUpdate();
+  useEffect(() => { triggerCheck(); }, []);
+  return null;
+}
 
+function UpdateModalController() {
+  const { updateInfo, dismiss } = useUpdate();
+  if (!updateInfo) return null;
+  return <UpdateModal info={updateInfo} onDismiss={dismiss} />;
+}
+
+export default function RootLayout() {
   useEffect(() => {
     setupNotificationChannel();
-    checkForUpdate().then((info) => { if (info) setUpdateInfo(info); });
   }, []);
 
   return (
-    <SettingsProvider>
-      <MenuProvider>
-        <ProgramProvider>
-          <FirstLaunchPermissions />
-          <NotificationScheduler />
-          <StatusBar style="light" />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#0D0D0D" } }}>
-            <Stack.Screen name="session" options={{ gestureEnabled: false }} />
-          </Stack>
-          {updateInfo && (
-            <UpdateModal info={updateInfo} onDismiss={() => setUpdateInfo(null)} />
-          )}
-        </ProgramProvider>
-      </MenuProvider>
-    </SettingsProvider>
+    <UpdateProvider>
+      <SettingsProvider>
+        <MenuProvider>
+          <ProgramProvider>
+            <UpdateChecker />
+            <FirstLaunchPermissions />
+            <NotificationScheduler />
+            <StatusBar style="light" />
+            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#0D0D0D" } }}>
+              <Stack.Screen name="session" options={{ gestureEnabled: false }} />
+            </Stack>
+            <UpdateModalController />
+          </ProgramProvider>
+        </MenuProvider>
+      </SettingsProvider>
+    </UpdateProvider>
   );
 }

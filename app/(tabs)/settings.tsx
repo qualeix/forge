@@ -16,6 +16,8 @@ import { useSettings } from "../../constants/SettingsContext";
 import { useMenu } from "../../constants/MenuContext";
 import { useProgram } from "../../constants/ProgramContext";
 import { ScalePress } from "../../components/ScalePress";
+import { useUpdate } from "../../constants/UpdateContext";
+import { APP_VERSION } from "../../constants/updater";
 import {
   requestPermission,
   getPermissionStatus,
@@ -109,6 +111,7 @@ export default function SettingsScreen() {
   const { db } = useSettings();
   const { menuData } = useMenu();
   const { schedule, workouts } = useProgram();
+  const { checking, upToDate, triggerCheck } = useUpdate();
 
   const [permStatus, setPermStatus] = useState<"granted" | "denied" | "undetermined">("undetermined");
   const [batteryOptStatus, setBatteryOptStatus] = useState<"granted" | "undetermined">("undetermined");
@@ -161,7 +164,6 @@ export default function SettingsScreen() {
     load();
     getPermissionStatus().then(setPermStatus);
     checkBatteryOptimizationIgnored().then((ok) => setBatteryOptStatus(ok ? "granted" : "undetermined"));
-
     const sub = AppState.addEventListener("change", (state) => {
       if (state === "active") {
         getPermissionStatus().then(setPermStatus);
@@ -264,6 +266,7 @@ export default function SettingsScreen() {
 
           {/* ── NOTIFICATIONS ── */}
           <SectionLabel>Notifications</SectionLabel>
+
 
           {/* Permission card */}
           <View style={{
@@ -501,8 +504,18 @@ export default function SettingsScreen() {
           }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: theme.spacing.md }}>
               <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "700" }}>Version</Text>
-              <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>1.7.9</Text>
+              <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>{APP_VERSION}</Text>
             </View>
+            <View style={{ height: 1, backgroundColor: theme.colors.border, marginHorizontal: 16 }} />
+            <ScalePress onPress={triggerCheck} disabled={checking} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: theme.spacing.md }}>
+              <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "700" }}>Chercher une mise à jour</Text>
+              {checking
+                ? <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>Vérification...</Text>
+                : upToDate
+                  ? <Text style={{ color: theme.colors.amber, fontSize: 13 }}>À jour</Text>
+                  : <Ionicons name="chevron-forward" size={16} color={theme.colors.textSecondary} />
+              }
+            </ScalePress>
             <View style={{ height: 1, backgroundColor: theme.colors.border, marginHorizontal: 16 }} />
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: theme.spacing.md }}>
               <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "700" }}>Développée par</Text>
