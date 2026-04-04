@@ -2,12 +2,14 @@ import { View, Text, ScrollView, Pressable, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { theme } from "../../constants/theme";
 import { useSettings } from "../../constants/SettingsContext";
 import { useProgram } from "../../constants/ProgramContext";
 import { useMenu } from "../../constants/MenuContext";
 import { getTodayKey } from "../../constants/data";
+import { parseTime } from "../../utils/time";
+import { useStaggeredAnimation } from "../../hooks/useStaggeredAnimation";
 
 export default function TodayScreen() {
   const router = useRouter();
@@ -35,36 +37,18 @@ export default function TodayScreen() {
 
   const now = new Date();
   const currentTime = now.getHours() * 60 + now.getMinutes();
-  const parseTime = (time: string) => {
-    const [h, m] = time.split(":").map(Number);
-    return h * 60 + m;
-  };
 
   const todayMeals = menuData[getTodayKey()] ?? [];
   const nextMeal = todayMeals.find((meal) => parseTime(meal.time) > currentTime);
   const dayName = t.days[now.getDay()];
   const dateStr = now.toLocaleDateString(t.date_locale, { day: "numeric", month: "long", year: "numeric" });
 
-  // Animations d'entrée décalées
-  const anims = useRef([0, 1, 2, 3].map(() => new Animated.Value(0))).current;
+  const animStyle = useStaggeredAnimation(4, 90);
   const btnScale = useRef(new Animated.Value(1)).current;
   const btnPressIn = () =>
     Animated.spring(btnScale, { toValue: 0.96, useNativeDriver: true, tension: 220, friction: 7 }).start();
   const btnPressOut = () =>
     Animated.spring(btnScale, { toValue: 1, useNativeDriver: true, tension: 220, friction: 7 }).start();
-
-  useEffect(() => {
-    Animated.stagger(90,
-      anims.map((a) =>
-        Animated.timing(a, { toValue: 1, duration: 380, useNativeDriver: true })
-      )
-    ).start();
-  }, []);
-
-  const animStyle = (i: number) => ({
-    opacity: anims[i],
-    transform: [{ translateY: anims[i].interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
-  });
 
   if (!programLoaded) return <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={["top"]} />;
 
@@ -127,7 +111,7 @@ export default function TodayScreen() {
                   {todayWorkout.exercises.map((ex) => (
                     <View key={ex.id} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                       <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "600", flex: 1 }}>
-                        {(ex as any).name_fr || ex.name}
+                        {ex.name}
                       </Text>
                       <Text style={{ color: theme.colors.textSecondary, fontSize: 12, fontWeight: "600" }}>
                         {ex.sets}×{ex.reps}

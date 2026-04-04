@@ -9,37 +9,25 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { theme } from "../../constants/theme";
 import { useSettings } from "../../constants/SettingsContext";
 import { useProgram } from "../../constants/ProgramContext";
 import { ScalePress } from "../../components/ScalePress";
+import { useStaggeredAnimation } from "../../hooks/useStaggeredAnimation";
 
 type WeightRow = { exercise_id: string; weight: number; date: string };
 
 export default function ProgressScreen() {
   const { t, db } = useSettings();
   const { workouts, exercises, getWorkoutDisplayName } = useProgram();
-  const getExName = (ex: any) => ex.name_fr || ex.name;
+  const getExName = (ex: any) => ex.name;
   const [weightMap, setWeightMap] = useState<Record<string, WeightRow>>({});
   const [activeExercise, setActiveExercise] = useState<{ id: string; name: string } | null>(null);
   const [weightInput, setWeightInput] = useState("");
   const [inputError, setInputError] = useState(false);
 
-  const anims = useRef([0, 1, 2, 3].map(() => new Animated.Value(0))).current;
-
-  useEffect(() => {
-    Animated.stagger(80,
-      anims.map((a) =>
-        Animated.timing(a, { toValue: 1, duration: 380, useNativeDriver: true })
-      )
-    ).start();
-  }, []);
-
-  const animStyle = (i: number) => ({
-    opacity: anims[Math.min(i, anims.length - 1)],
-    transform: [{ translateY: anims[Math.min(i, anims.length - 1)].interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
-  });
+  const animStyle = useStaggeredAnimation(4, 80);
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -93,7 +81,6 @@ export default function ProgressScreen() {
       exercises: (exercises[w.key] ?? []).map((e) => ({
         id: e.id,
         name: e.name,
-        name_fr: e.name_fr,
         sets: e.sets,
         reps: e.reps,
       })),

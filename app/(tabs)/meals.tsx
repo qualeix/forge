@@ -18,6 +18,8 @@ import { useSettings } from "../../constants/SettingsContext";
 import { useMenu, type MenuMeal } from "../../constants/MenuContext";
 import { useProgram } from "../../constants/ProgramContext";
 import { ScalePress } from "../../components/ScalePress";
+import { parseTime } from "../../utils/time";
+import { useStaggeredAnimation } from "../../hooks/useStaggeredAnimation";
 
 const DAY_ORDER: DayKey[] = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
@@ -354,21 +356,7 @@ export default function MealsScreen() {
   const todayMeals = menuData[todayKey] ?? [];
   const [weeklyVisible, setWeeklyVisible] = useState(false);
 
-  const anims = useRef([0, 1, 2].map(() => new Animated.Value(0))).current;
-  useEffect(() => {
-    Animated.stagger(80,
-      anims.map((a) => Animated.timing(a, { toValue: 1, duration: 380, useNativeDriver: true }))
-    ).start();
-  }, []);
-  const animStyle = (i: number) => ({
-    opacity: anims[i],
-    transform: [{ translateY: anims[i].interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
-  });
-
-  const parseTime = (time: string) => {
-    const [h, m] = time.split(":").map(Number);
-    return h * 60 + (m || 0);
-  };
+  const animStyle = useStaggeredAnimation(3, 80);
 
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();

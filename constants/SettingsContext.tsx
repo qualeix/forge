@@ -34,10 +34,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         "CREATE TABLE IF NOT EXISTS schedule (day_index INTEGER PRIMARY KEY, workout_key TEXT)"
       );
       await database.runAsync(
-        "CREATE TABLE IF NOT EXISTS workouts (key TEXT PRIMARY KEY, name TEXT NOT NULL, name_fr TEXT NOT NULL, rest_seconds INTEGER NOT NULL DEFAULT 90, sort_order INTEGER NOT NULL DEFAULT 0)"
+        "CREATE TABLE IF NOT EXISTS workouts (key TEXT PRIMARY KEY, name TEXT NOT NULL, rest_seconds INTEGER NOT NULL DEFAULT 90, sort_order INTEGER NOT NULL DEFAULT 0)"
       );
       await database.runAsync(
-        "CREATE TABLE IF NOT EXISTS exercises (id TEXT NOT NULL, workout_key TEXT NOT NULL, name TEXT NOT NULL, name_fr TEXT NOT NULL, sets INTEGER NOT NULL, reps TEXT NOT NULL, cue TEXT NOT NULL DEFAULT '', cue_fr TEXT NOT NULL DEFAULT '', technique TEXT NOT NULL DEFAULT '', technique_fr TEXT NOT NULL DEFAULT '', sort_order INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (id, workout_key), FOREIGN KEY (workout_key) REFERENCES workouts(key) ON DELETE CASCADE)"
+        "CREATE TABLE IF NOT EXISTS exercises (id TEXT NOT NULL, workout_key TEXT NOT NULL, name TEXT NOT NULL, sets INTEGER NOT NULL, reps TEXT NOT NULL, cue TEXT NOT NULL DEFAULT '', technique TEXT NOT NULL DEFAULT '', sort_order INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (id, workout_key), FOREIGN KEY (workout_key) REFERENCES workouts(key) ON DELETE CASCADE)"
       );
       await database.runAsync(
         "CREATE TABLE IF NOT EXISTS menu_meals (id INTEGER PRIMARY KEY AUTOINCREMENT, day_key TEXT NOT NULL, name TEXT NOT NULL, details TEXT NOT NULL DEFAULT '', time TEXT NOT NULL, sort_order INTEGER NOT NULL DEFAULT 0)"
@@ -74,6 +74,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         );
       } catch {}
 
+      // Migration: supprimer colonnes _fr redondantes (le champ name contient déjà la valeur française)
+      try { await database.runAsync("ALTER TABLE exercises DROP COLUMN name_fr"); } catch {}
+      try { await database.runAsync("ALTER TABLE exercises DROP COLUMN cue_fr"); } catch {}
+      try { await database.runAsync("ALTER TABLE exercises DROP COLUMN technique_fr"); } catch {}
+      try { await database.runAsync("ALTER TABLE workouts DROP COLUMN name_fr"); } catch {}
+
       // Seed workouts + exercises au premier lancement
       const seeded = await database.getFirstAsync<{ value: string }>(
         "SELECT value FROM settings WHERE key = 'data_seeded'"
@@ -84,14 +90,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           const wk = keys[si];
           const w = WORKOUT_DATA[wk];
           await database.runAsync(
-            "INSERT OR IGNORE INTO workouts (key, name, name_fr, rest_seconds, sort_order) VALUES (?, ?, ?, ?, ?)",
-            [wk, w.name, (w as any).name_fr ?? w.name, (w as any).restSeconds ?? 90, si]
+            "INSERT OR IGNORE INTO workouts (key, name, rest_seconds, sort_order) VALUES (?, ?, ?, ?)",
+            [wk, w.name, (w as any).restSeconds ?? 90, si]
           );
           for (let ei = 0; ei < w.exercises.length; ei++) {
             const ex = w.exercises[ei];
             await database.runAsync(
-              "INSERT OR IGNORE INTO exercises (id, workout_key, name, name_fr, sets, reps, cue, cue_fr, technique, technique_fr, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-              [ex.id, wk, ex.name, (ex as any).name_fr ?? ex.name, ex.sets, String(ex.reps), (ex as any).cue ?? "", (ex as any).cue_fr ?? "", (ex as any).technique ?? "", (ex as any).technique_fr ?? "", ei]
+              "INSERT OR IGNORE INTO exercises (id, workout_key, name, sets, reps, cue, technique, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+              [ex.id, wk, ex.name, ex.sets, String(ex.reps), (ex as any).cue ?? "", (ex as any).technique ?? "", ei]
             );
           }
         }
@@ -110,8 +116,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           );
           for (const r of oldNames) {
             await database.runAsync(
-              "UPDATE workouts SET name = ?, name_fr = ? WHERE key = ?",
-              [r.custom_name, r.custom_name, r.workout_key]
+              "UPDATE workouts SET name = ? WHERE key = ?",
+              [r.custom_name, r.workout_key]
             );
           }
         } catch {}
@@ -152,7 +158,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             const meal = day.meals[mi];
             await database.runAsync(
               "INSERT INTO menu_meals (day_key, name, details, time, sort_order) VALUES (?, ?, ?, ?, ?)",
-              [dayKey, (meal as any).name_fr ?? meal.name, (meal as any).details_fr ?? meal.details, meal.time, mi]
+              [dayKey, meal.name, meal.details, meal.time, mi]
             );
           }
         }

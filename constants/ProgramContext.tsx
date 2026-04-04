@@ -7,7 +7,6 @@ type Schedule = Record<number, string | null>;
 export type WorkoutRecord = {
   key: string;
   name: string;
-  name_fr: string;
   restSeconds: number;
   sortOrder: number;
   notifEnabled: number;
@@ -19,13 +18,10 @@ export type ExerciseRecord = {
   id: string;
   workoutKey: string;
   name: string;
-  name_fr: string;
   sets: number;
   reps: string;
   cue: string;
-  cue_fr: string;
   technique: string;
-  technique_fr: string;
   sortOrder: number;
 };
 
@@ -38,9 +34,9 @@ type ProgramCtx = {
   getWorkoutDisplayName: (workoutKey: string) => string;
   getWorkoutForDay: (dayIndex: number) => any;
   getTodayWorkout: () => any;
-  createWorkout: (name: string, nameFr: string) => Promise<string>;
+  createWorkout: (name: string) => Promise<string>;
   deleteWorkout: (workoutKey: string) => Promise<void>;
-  updateWorkout: (workoutKey: string, fields: Partial<Pick<WorkoutRecord, "name" | "name_fr" | "restSeconds" | "notifEnabled" | "notifTime" | "notifBody">>) => void;
+  updateWorkout: (workoutKey: string, fields: Partial<Pick<WorkoutRecord, "name" | "restSeconds" | "notifEnabled" | "notifTime" | "notifBody">>) => void;
   addExercise: (workoutKey: string, ex: Omit<ExerciseRecord, "workoutKey" | "sortOrder">) => Promise<void>;
   removeExercise: (workoutKey: string, exerciseId: string) => Promise<void>;
   updateExercise: (workoutKey: string, exerciseId: string, fields: Partial<Omit<ExerciseRecord, "id" | "workoutKey" | "sortOrder">>) => void;
@@ -89,12 +85,11 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
     }
 
     const wRows = await db.getAllAsync<{
-      key: string; name: string; name_fr: string; rest_seconds: number; sort_order: number; notif_enabled: number; notif_time: string; notif_body: string;
-    }>("SELECT key, name, name_fr, rest_seconds, sort_order, notif_enabled, notif_time, notif_body FROM workouts ORDER BY sort_order");
+      key: string; name: string; rest_seconds: number; sort_order: number; notif_enabled: number; notif_time: string; notif_body: string;
+    }>("SELECT key, name, rest_seconds, sort_order, notif_enabled, notif_time, notif_body FROM workouts ORDER BY sort_order");
     setWorkouts(wRows.map((r) => ({
       key: r.key,
       name: r.name,
-      name_fr: r.name_fr,
       restSeconds: r.rest_seconds,
       sortOrder: r.sort_order,
       notifEnabled: r.notif_enabled ?? 1,
@@ -104,10 +99,10 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
 
     // Exercises grouped by workout_key
     const eRows = await db.getAllAsync<{
-      id: string; workout_key: string; name: string; name_fr: string;
-      sets: number; reps: string; cue: string; cue_fr: string;
-      technique: string; technique_fr: string; sort_order: number;
-    }>("SELECT id, workout_key, name, name_fr, sets, reps, cue, cue_fr, technique, technique_fr, sort_order FROM exercises ORDER BY sort_order");
+      id: string; workout_key: string; name: string;
+      sets: number; reps: string; cue: string;
+      technique: string; sort_order: number;
+    }>("SELECT id, workout_key, name, sets, reps, cue, technique, sort_order FROM exercises ORDER BY sort_order");
     const grouped: Record<string, ExerciseRecord[]> = {};
     eRows.forEach((r) => {
       if (!grouped[r.workout_key]) grouped[r.workout_key] = [];
@@ -115,13 +110,10 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
         id: r.id,
         workoutKey: r.workout_key,
         name: r.name,
-        name_fr: r.name_fr,
         sets: r.sets,
         reps: r.reps,
         cue: r.cue,
-        cue_fr: r.cue_fr,
         technique: r.technique,
-        technique_fr: r.technique_fr,
         sortOrder: r.sort_order,
       });
     });
@@ -144,7 +136,7 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
   const getWorkoutDisplayName = (workoutKey: string) => {
     const w = workouts.find((x) => x.key === workoutKey);
     if (!w) return workoutKey;
-    return w.name_fr || w.name;
+    return w.name;
   };
 
   const assembleWorkout = (workoutKey: string) => {
@@ -153,17 +145,13 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
     const exs = (exercises[workoutKey] ?? []).map((e) => ({
       id: e.id,
       name: e.name,
-      name_fr: e.name_fr,
       sets: e.sets,
       reps: isNaN(Number(e.reps)) ? e.reps : Number(e.reps),
       cue: e.cue,
-      cue_fr: e.cue_fr,
       technique: e.technique,
-      technique_fr: e.technique_fr,
     }));
     return {
       name: w.name,
-      name_fr: w.name_fr,
       restSeconds: w.restSeconds,
       exercises: exs,
     };
@@ -177,13 +165,13 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
 
   const getTodayWorkout = () => getWorkoutForDay(new Date().getDay());
 
-  const createWorkout = async (name: string, nameFr: string): Promise<string> => {
+  const createWorkout = async (name: string): Promise<string> => {
     const key = `custom_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const maxSort = workouts.length > 0 ? Math.max(...workouts.map((w) => w.sortOrder)) + 1 : 0;
     if (db) {
       await db.runAsync(
-        "INSERT INTO workouts (key, name, name_fr, rest_seconds, sort_order) VALUES (?, ?, ?, 90, ?)",
-        [key, name, nameFr || name, maxSort]
+        "INSERT INTO workouts (key, name, rest_seconds, sort_order) VALUES (?, ?, 90, ?)",
+        [key, name, maxSort]
       );
     }
     await load();
@@ -206,11 +194,10 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
     await load();
   };
 
-  const updateWorkout = (workoutKey: string, fields: Partial<Pick<WorkoutRecord, "name" | "name_fr" | "restSeconds" | "notifEnabled" | "notifTime" | "notifBody">>) => {
+  const updateWorkout = (workoutKey: string, fields: Partial<Pick<WorkoutRecord, "name" | "restSeconds" | "notifEnabled" | "notifTime" | "notifBody">>) => {
     setWorkouts((prev) => prev.map((w) => w.key === workoutKey ? { ...w, ...fields } : w));
     if (db) {
       if (fields.name !== undefined) db.runAsync("UPDATE workouts SET name = ? WHERE key = ?", [fields.name, workoutKey]).catch(() => {});
-      if (fields.name_fr !== undefined) db.runAsync("UPDATE workouts SET name_fr = ? WHERE key = ?", [fields.name_fr, workoutKey]).catch(() => {});
       if (fields.restSeconds !== undefined) db.runAsync("UPDATE workouts SET rest_seconds = ? WHERE key = ?", [fields.restSeconds, workoutKey]).catch(() => {});
       if (fields.notifEnabled !== undefined) db.runAsync("UPDATE workouts SET notif_enabled = ? WHERE key = ?", [fields.notifEnabled, workoutKey]).catch(() => {});
       if (fields.notifTime !== undefined) db.runAsync("UPDATE workouts SET notif_time = ? WHERE key = ?", [fields.notifTime, workoutKey]).catch(() => {});
@@ -223,8 +210,8 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
     const maxSort = existing.length > 0 ? Math.max(...existing.map((e) => e.sortOrder)) + 1 : 0;
     if (db) {
       await db.runAsync(
-        "INSERT INTO exercises (id, workout_key, name, name_fr, sets, reps, cue, cue_fr, technique, technique_fr, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [ex.id, workoutKey, ex.name, ex.name_fr, ex.sets, ex.reps, ex.cue, ex.cue_fr, ex.technique, ex.technique_fr, maxSort]
+        "INSERT INTO exercises (id, workout_key, name, sets, reps, cue, technique, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [ex.id, workoutKey, ex.name, ex.sets, ex.reps, ex.cue, ex.technique, maxSort]
       );
     }
     await load();
@@ -246,8 +233,8 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
     }));
     if (db) {
       const colMap: Record<string, string> = {
-        name: "name", name_fr: "name_fr", sets: "sets", reps: "reps",
-        cue: "cue", cue_fr: "cue_fr", technique: "technique", technique_fr: "technique_fr",
+        name: "name", sets: "sets", reps: "reps",
+        cue: "cue", technique: "technique",
       };
       Object.entries(fields).forEach(([k, v]) => {
         const col = colMap[k];

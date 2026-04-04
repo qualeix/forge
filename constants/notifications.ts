@@ -156,7 +156,7 @@ export async function scheduleWorkoutNotifications(
     if (!workoutKey) continue;
     const workout = workoutMap.get(workoutKey);
     if (!workout) continue;
-    const displayName = workout.name_fr || workout.name;
+    const displayName = workout.name;
     const date = nextOccurrence(dayIndex, hour, minute);
     try {
       await Notifications.scheduleNotificationAsync({

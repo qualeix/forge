@@ -2,7 +2,7 @@
   "expo": {
     "name": "Forge",
     "slug": "forge",
-    "version": "1.8.2",
+    "version": "1.8.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -21,7 +21,7 @@
         "backgroundColor": "#0D0D0D"
       },
       "predictiveBackGestureEnabled": false,
-      "versionCode": 26,
+      "versionCode": 28,
       "package": "com.forge.app",
       "permissions": [
         "android.permission.USE_EXACT_ALARM",

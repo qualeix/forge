@@ -2,7 +2,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
 import * as Notifications from "expo-notifications";
-import { Platform, View, Text, Animated } from "react-native";
+import { Platform, View, Text, Animated, Modal } from "react-native";
 import { ScalePress } from "../components/ScalePress";
 import { downloadAndInstall, UpdateInfo } from "../constants/updater";
 import { theme } from "../constants/theme";
@@ -13,7 +13,8 @@ import { useSettings } from "../constants/SettingsContext";
 import { useMenu } from "../constants/MenuContext";
 import { useProgram } from "../constants/ProgramContext";
 import { UpdateProvider, useUpdate } from "../constants/UpdateContext";
-import { setupNotificationChannel, scheduleMealNotifications, cancelMealNotifications, scheduleWorkoutNotifications, cancelWorkoutNotifications, requestIgnoreBatteryOptimizations, getScheduledNotificationsSummary } from "../constants/notifications";
+import { setupNotificationChannel, scheduleMealNotifications, cancelMealNotifications, scheduleWorkoutNotifications, cancelWorkoutNotifications, requestIgnoreBatteryOptimizations, checkBatteryOptimizationIgnored } from "../constants/notifications";
+import { handleError } from "../utils/errorHandler";
 
 // Affiche les notifications même quand l'app est au premier plan
 Notifications.setNotificationHandler({
@@ -44,11 +45,12 @@ function UpdateModal({ info, onDismiss }: { info: UpdateInfo; onDismiss: () => v
   };
 
   return (
-    <View style={{
-      position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "center",
-      alignItems: "center", zIndex: 9999, padding: 24,
-    }}>
+    <Modal transparent animationType="fade" visible statusBarTranslucent onRequestClose={onDismiss}>
+      <View style={{
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "center",
+        alignItems: "center", padding: 24,
+      }}>
       <View style={{
         backgroundColor: theme.colors.card, borderRadius: theme.radius.lg,
         borderWidth: 1, borderColor: theme.colors.amberDeep,
@@ -98,7 +100,8 @@ function UpdateModal({ info, onDismiss }: { info: UpdateInfo; onDismiss: () => v
           </ScalePress>
         )}
       </View>
-    </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -124,9 +127,11 @@ function FirstLaunchPermissions() {
 
       if (Platform.OS === "android" && !map["battery_opt_asked"]) {
         await requestIgnoreBatteryOptimizations();
-        await db.runAsync(
-          "INSERT OR REPLACE INTO settings (key, value) VALUES ('battery_opt_asked', '1'), ('battery_opt_granted', '1')"
-        );
+        const granted = await checkBatteryOptimizationIgnored();
+        await db.runAsync("INSERT OR REPLACE INTO settings (key, value) VALUES ('battery_opt_asked', '1')");
+        if (granted) {
+          await db.runAsync("INSERT OR REPLACE INTO settings (key, value) VALUES ('battery_opt_granted', '1')");
+        }
       }
     })();
   }, [db]);
@@ -156,9 +161,7 @@ function NotificationScheduler() {
       } else {
         await cancelWorkoutNotifications();
       }
-      const summary = await getScheduledNotificationsSummary();
-      console.log("[Forge notif] After workout scheduling — total scheduled:", JSON.stringify(summary));
-    }).catch((e) => { console.warn("[Forge notif] NotificationScheduler workout error:", e); });
+    }).catch((e) => { handleError(e, "NotificationScheduler workouts"); });
   }, [db, programLoaded]);
 
   useEffect(() => {
@@ -174,9 +177,7 @@ function NotificationScheduler() {
       } else {
         await cancelMealNotifications();
       }
-      const summary = await getScheduledNotificationsSummary();
-      console.log("[Forge notif] After meal scheduling — total scheduled:", JSON.stringify(summary));
-    }).catch((e) => { console.warn("[Forge notif] NotificationScheduler meal error:", e); });
+    }).catch((e) => { handleError(e, "NotificationScheduler meals"); });
   }, [db, menuData]);
 
   return null;

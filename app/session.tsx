@@ -21,6 +21,8 @@ import { useState, useEffect, useRef } from "react";
 import { theme } from "../constants/theme";
 import { useSettings } from "../constants/SettingsContext";
 import { useProgram } from "../constants/ProgramContext";
+import { handleError } from "../utils/errorHandler";
+import { RestModal } from "../components/session/RestModal";
 
 
 export default function SessionScreen() {
@@ -32,9 +34,6 @@ export default function SessionScreen() {
     if (router.canGoBack()) router.back();
     else router.replace("/");
   };
-  const exName = (ex: any) => ex.name_fr || ex.name;
-  const exCue = (ex: any) => ex.cue_fr || ex.cue;
-  const exTechnique = (ex: any) => ex.technique_fr || ex.technique;
   const todayKey = schedule[new Date().getDay()];
   const workoutName = todayKey ? getWorkoutDisplayName(todayKey) : "";
 
@@ -114,7 +113,7 @@ export default function SessionScreen() {
       "SELECT value FROM settings WHERE key = 'notif_timer_on'"
     ).then((row) => {
       notifTimerEnabledRef.current = !row || row.value === "1";
-    }).catch(() => {});
+    }).catch((e) => handleError(e, "load notif_timer_on"));
   }, [db]);
 
   // Charger les poids depuis la DB
@@ -161,7 +160,7 @@ export default function SessionScreen() {
       db.runAsync(
         "INSERT OR REPLACE INTO settings (key, value) VALUES (?, '1')",
         [`session_done_${today}`]
-      ).catch(() => {});
+      ).catch((e) => handleError(e, "save session_done"));
     }
   }, [sessionDone, db]);
 
@@ -262,9 +261,9 @@ export default function SessionScreen() {
       if (restTypeRef.current === "exercise") {
         const nextId = findNextExerciseId(currentExerciseId);
         const nextEx = nextId ? exercises.find((e: any) => e.id === nextId) : null;
-        body = nextEx ? exName(nextEx) : "Séance terminée !";
+        body = nextEx ? nextEx.name : "Séance terminée !";
       } else {
-        body = `${exName(currentExercise)} · série ${currentSet} sur ${totalSets}`;
+        body = `${currentExercise.name} · série ${currentSet} sur ${totalSets}`;
       }
       Notifications.scheduleNotificationAsync({
         content: {
@@ -278,7 +277,7 @@ export default function SessionScreen() {
           seconds: restDuration,
           channelId: NOTIF_CHANNEL,
         } as any,
-      }).then((id) => { restNotifIdRef.current = id; }).catch(() => {});
+      }).then((id) => { restNotifIdRef.current = id; }).catch((e) => handleError(e, "schedule rest notif"));
     }
 
     const handleTimerDone = () => {
@@ -290,7 +289,7 @@ export default function SessionScreen() {
 
       // App au premier plan : l'utilisateur voit le timer → annuler la notif planifiée
       if (AppState.currentState === "active" && restNotifIdRef.current) {
-        Notifications.cancelScheduledNotificationAsync(restNotifIdRef.current).catch(() => {});
+        Notifications.cancelScheduledNotificationAsync(restNotifIdRef.current).catch((e) => handleError(e, "cancel rest notif (timer done)"));
         restNotifIdRef.current = null;
       }
 
@@ -349,7 +348,7 @@ export default function SessionScreen() {
     if (doneTimeoutRef.current) { clearTimeout(doneTimeoutRef.current); doneTimeoutRef.current = null; }
     // Annuler la notification planifiée (pas encore délivrée)
     if (restNotifIdRef.current) {
-      Notifications.cancelScheduledNotificationAsync(restNotifIdRef.current).catch(() => {});
+      Notifications.cancelScheduledNotificationAsync(restNotifIdRef.current).catch((e) => handleError(e, "cancel rest notif (skip)"));
       restNotifIdRef.current = null;
     }
     timerFiredRef.current = true;
@@ -474,6 +473,14 @@ export default function SessionScreen() {
   const restIsForExercise = restTypeRef.current === "exercise";
   const currentPR = prMap[currentExercise?.id ?? ""];
 
+  const upNextName = restIsForExercise
+    ? (() => {
+        const nextId = findNextExerciseId(currentExerciseId);
+        const nextEx = nextId ? exercises.find((e: any) => e.id === nextId) : null;
+        return nextEx ? nextEx.name : t.session_done;
+      })()
+    : currentExercise.name;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       {ExitModal}
@@ -513,59 +520,18 @@ export default function SessionScreen() {
         showsVerticalScrollIndicator={false}
       >
         {isResting ? (
-          /* ── ÉCRAN REPOS ── */
-          <View style={{ alignItems: "center", paddingTop: 24 }}>
-            <Text style={{ color: theme.colors.textSecondary, fontSize: 11, letterSpacing: 3, textTransform: "uppercase", marginBottom: 36 }}>
-              {timerDone ? t.session_times_up : t.session_rest}
-            </Text>
-
-            {/* Anneau timer */}
-            <Animated.View style={{ width: 200, height: 200, alignItems: "center", justifyContent: "center", marginBottom: 36, opacity: flashAnim }}>
-              <View style={{ position: "absolute", width: 200, height: 200, borderRadius: 100, borderWidth: 6, borderColor: theme.colors.border }} />
-              <View style={{
-                position: "absolute", width: 200, height: 200,
-                borderRadius: 100, borderWidth: 6,
-                borderColor: theme.colors.amber,
-                opacity: timerDone ? 1 : Math.max(0.1, restProgress),
-                shadowColor: theme.colors.amber,
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: timerDone ? 0.8 : 0.55 * restProgress,
-                shadowRadius: timerDone ? 24 : 16,
-              }} />
-              <Text style={{ color: theme.colors.amber, fontSize: 76, fontWeight: "900", lineHeight: 84 }}>
-                {restSecondsLeft}
-              </Text>
-              <Text style={{ color: theme.colors.textSecondary, fontSize: 12, letterSpacing: 1 }}>{t.session_seconds}</Text>
-            </Animated.View>
-
-            <Text style={{ color: theme.colors.textSecondary, fontSize: 13, marginBottom: 6 }}>{t.session_up_next}</Text>
-            <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: "800", marginBottom: 6, textAlign: "center" }}>
-              {restIsForExercise
-                ? (() => {
-                    const nextId = findNextExerciseId(currentExerciseId);
-                    const nextEx = nextId ? exercises.find((e: any) => e.id === nextId) : null;
-                    return nextEx ? exName(nextEx) : t.session_done;
-                  })()
-                : exName(currentExercise)}
-            </Text>
-            {!restIsForExercise && (
-              <Text style={{ color: theme.colors.textSecondary, fontSize: 15, marginBottom: 36 }}>
-                {t.session_set_of(currentSet, totalSets)}
-              </Text>
-            )}
-
-            <ScalePress onPress={skipRest} style={{ marginTop: 16 }}>
-              <View style={{
-                borderWidth: 1,
-                borderColor: theme.colors.border,
-                borderRadius: theme.radius.md,
-                paddingVertical: 12,
-                paddingHorizontal: 32,
-              }}>
-                <Text style={{ color: theme.colors.textSecondary, fontSize: 14, fontWeight: "600" }}>{t.session_skip_rest}</Text>
-              </View>
-            </ScalePress>
-          </View>
+          <RestModal
+            timerDone={timerDone}
+            restSecondsLeft={restSecondsLeft}
+            restProgress={restProgress}
+            restIsForExercise={restIsForExercise}
+            flashAnim={flashAnim}
+            upNextName={upNextName}
+            currentSet={currentSet}
+            totalSets={totalSets}
+            onSkip={skipRest}
+            t={t}
+          />
         ) : (
           /* ── ÉCRAN EXERCICE ── */
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
@@ -591,7 +557,7 @@ export default function SessionScreen() {
             </Text>
 
             <Text style={{ color: theme.colors.text, fontSize: 40, fontWeight: "900", letterSpacing: -1, marginBottom: 4, lineHeight: 46 }}>
-              {exName(currentExercise)}
+              {currentExercise.name}
             </Text>
 
             <Text style={{
@@ -693,7 +659,7 @@ export default function SessionScreen() {
             </View>
 
             {/* Carte technique - masquée si ni conseil ni technique */}
-            {(exCue(currentExercise) || exTechnique(currentExercise)) ? (
+            {(currentExercise.cue || currentExercise.technique) ? (
               <View style={{
                 backgroundColor: theme.colors.card,
                 borderRadius: theme.radius.lg,
@@ -713,18 +679,18 @@ export default function SessionScreen() {
                     <Ionicons name="chevron-down" size={16} color={expandedCue ? theme.colors.amber : theme.colors.muted} />
                   </Animated.View>
                 </Pressable>
-                {exCue(currentExercise) ? (
+                {currentExercise.cue ? (
                   <Text style={{ color: theme.colors.textSecondary, fontSize: 14, lineHeight: 22, paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.md }}>
-                    {exCue(currentExercise)}
+                    {currentExercise.cue}
                   </Text>
                 ) : null}
-                {exTechnique(currentExercise) ? (
+                {currentExercise.technique ? (
                   <Animated.View style={{
                     maxHeight: expandAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 200] }),
                     overflow: "hidden",
                   }}>
                     <Text style={{ color: theme.colors.textSecondary, fontSize: 14, lineHeight: 22, paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.md }}>
-                      {exTechnique(currentExercise)}
+                      {currentExercise.technique}
                     </Text>
                   </Animated.View>
                 ) : null}
@@ -806,7 +772,7 @@ export default function SessionScreen() {
                           style={{ flex: 1 }}
                         >
                           <Text style={{ color: theme.colors.textSecondary, fontSize: 14, fontWeight: "600" }}>
-                            {exName(ex)}
+                            {ex.name}
                           </Text>
                         </Pressable>
                         <Text style={{ color: theme.colors.textSecondary, fontSize: 12, fontWeight: "600", marginRight: 4 }}>

@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback, ty
 import * as SQLite from "expo-sqlite";
 import { useSettings } from "./SettingsContext";
 import type { DayKey } from "./data";
+import { parseTime } from "../utils/time";
 
 export type MenuMeal = {
   id: number;
@@ -27,11 +28,6 @@ const MenuContext = createContext<MenuCtx>({
   updateMeal: async () => {},
   deleteMeal: async () => {},
 });
-
-const parseTime = (t: string) => {
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + (m || 0);
-};
 
 export function MenuProvider({ children }: { children: ReactNode }) {
   // db de SettingsContext = signal que le seeding est terminé, pas utilisé pour les requêtes
